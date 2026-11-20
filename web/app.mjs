@@ -71,7 +71,6 @@ slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
 
 function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
-    if (id === "preset") return [id,value];
     if (id === "yaw") return [id,yaw];
     if (id === "pitch") return [id,pitch];
     const field = el(id);
@@ -278,7 +277,7 @@ function stop() {
   worker.postMessage({type:"stop"});
 }
 estimateAction.addEventListener("click",stop);
-for (const id of ["channels","size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
+for (const id of ["preset","channels","size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Polarization: A web-based physically based renderer</title>
   <link rel="stylesheet" href="./style.css?v=13">
-  <script type="module" src="./app.mjs?v=7"></script>
+  <script type="module" src="./app.mjs?v=8"></script>
 </head>
 <body>
   <main class="window">
@@ -49,7 +49,10 @@
         </div>
         <div class="settings-panel" id="scene-panel" role="tabpanel" aria-labelledby="scene-tab">
           <fieldset id="scene" class="panel-fields">
-            <legend>Cornell box setup</legend>
+            <legend>Scene setup</legend>
+            <label class="row">Scene
+              <select id="preset"><option value="cornell">Cornell Box</option></select>
+            </label>
             <label class="row">Channels
               <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
             </label>
