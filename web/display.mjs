@@ -1,5 +1,5 @@
-import {palettes} from "./palettes.mjs?v=35";
-import {clamp} from "./scene.mjs?v=35";
+import {palettes} from "./palettes.mjs?v=36";
+import {clamp} from "./scene.mjs?v=36";
 
 export const filters = {
   rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true},
@@ -9,9 +9,9 @@ export const filters = {
   dop:{title:"Degree of Polarization",log:true,hint:"The fraction of the light that is polarized."},
   aolp:{title:"AoLP [°]",range:[-90,90],map:"phase",hint:"The angle of linear polarization, measured in degrees."},
   ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis",hint:"How close the polarization is to linear or circular."},
-  q:{title:"Q / I",range:[-1,1],map:"diverging",hint:"Horizontal versus vertical linear polarization, divided by intensity."},
-  u:{title:"U / I",range:[-1,1],map:"diverging",hint:"+45° versus −45° linear polarization, divided by intensity."},
-  v:{title:"V / I",range:[-1,1],map:"diverging",hint:"Right versus left circular polarization, divided by intensity."},
+  q:{title:"Q-Stokes",range:[-1,1],map:"diverging",hint:"Q / I: horizontal versus vertical linear polarization, divided by intensity."},
+  u:{title:"U-Stokes",range:[-1,1],map:"diverging",hint:"U / I: +45° versus −45° linear polarization, divided by intensity."},
+  v:{title:"V-Stokes",range:[-1,1],map:"diverging",hint:"V / I: right versus left circular polarization, divided by intensity."},
 };
 export const luminanceWeights = [.212671,.715160,.072169];
 export const channelNames = {rgb:"Luminance",0:"Red",1:"Green",2:"Blue"};

@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=35";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=35";
-import {setupExport} from "./export.mjs?v=35";
+import {clamp,defaultScene} from "./scene.mjs?v=36";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=36";
+import {setupExport} from "./export.mjs?v=36";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=35",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=36",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -27,7 +27,7 @@ let pitch = defaultScene.pitch;
 let cameraRenderPending = false;
 let renderTimer;
 let barMap;
-let rgbMemory;
+let filterMemory;
 let suggestionCache;
 // Full-resolution throughput, used to estimate export times.
 let speed;
@@ -79,7 +79,6 @@ const sceneSliders = ["source_dop","source_aolp","source_ellipticity","distance"
 slider("sourceControls","source_dop","Degree of polarization",0,1,.01,0,value => Math.round(value*100)+"%");
 slider("sourceControls","source_aolp","Angle of polarization",-90,90,.1,0,degrees);
 slider("sourceControls","source_ellipticity","Ellipticity",-1,1,.01,0,fixed(2));
-slider("displaySliders","exposure","Exposure",-8,8,.1,0,value => (value>0 ? "+" : "")+value.toFixed(1)+" EV");
 slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
 
 function readSettings() {
@@ -104,12 +103,6 @@ function updateButtons() {
     Number(controls.distance.field.value)===defaultScene.distance;
   el("reset").disabled = cameraDefault || Boolean(drag?.moved);
   el("progress").classList.toggle("active",running);
-  let state = "";
-  if (drag?.moved) state = "Preview";
-  else if (running) state = "Rendering "+samplesText(frame?.samples ?? 0,requested);
-  else if (cameraRenderPending || renderTimer) state = "Starting…";
-  else if (frame) state = (frame.samples<requested ? "Stopped · " : "")+samplesText(frame.samples);
-  el("renderState").textContent = state;
   el("stopRender").hidden = !running || stopping || Boolean(drag?.moved);
   for (const button of document.querySelectorAll("[data-spp]")) button.setAttribute("aria-pressed",String(button.dataset.spp===spp.value));
   const depth = Number(el("max_depth").value);
@@ -134,21 +127,20 @@ function setOptions(element,entries) {
 
 const frameChannels = () => frame?.channels ?? (defaultScene.channels==="rgb" ? 3 : 1);
 
-// RGB filters need the RGB view. A single channel swaps them for their scalar versions, and
-// choosing RGB again brings the color filter back.
+// RGB offers only the RGB filters and a single channel only the scalar ones. Switching maps
+// Intensity and Analyzer to their counterparts, and switching straight back restores the filter
+// that was showing before.
+const counterpart = {rgbIntensity:"intensity",rgbAnalyzer:"analyzer",intensity:"rgbIntensity",analyzer:"rgbAnalyzer"};
 function updateFilterOptions(wanted = display.filter) {
   const rgbFrame = frameChannels() === 3;
-  const allowRgb = rgbFrame && display.channel === "rgb";
+  const rgbView = rgbFrame && display.channel === "rgb";
   el("viewSwitch").hidden = !rgbFrame;
-  const entries = Object.entries(filters).filter(([,spec]) => allowRgb || !spec.rgb);
+  const entries = Object.entries(filters).filter(([,spec]) => Boolean(spec.rgb) === rgbView);
   setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title]));
-  if (!allowRgb && filters[wanted].rgb) {
-    const target = wanted === "rgbAnalyzer" ? "analyzer" : "intensity";
-    rgbMemory = {filter:wanted,target};
-    wanted = target;
-  } else if (allowRgb && rgbMemory) {
-    if (wanted === rgbMemory.target) wanted = rgbMemory.filter;
-    rgbMemory = undefined;
+  if (Boolean(filters[wanted].rgb) !== rgbView) {
+    const previous = wanted;
+    wanted = filterMemory?.to === wanted ? filterMemory.from : counterpart[wanted] ?? (rgbView ? "rgbIntensity" : "intensity");
+    filterMemory = {from:previous,to:wanted};
   }
   el("filter").value = wanted;
   if (wanted!==display.filter) changeFilter();
@@ -163,7 +155,6 @@ function updateDisplayControls() {
   const previousMap = display.map;
   el("scalarControls").hidden = Boolean(spec.rgb);
   el("ellipticityHelp").hidden = display.filter !== "ellipticity";
-  controls.exposure.wrapper.hidden = !spec.exposure;
   el("analyzerControl").hidden = !spec.analyzer;
   el("logControl").hidden = !spec.log;
   const channelRatio = ["q","u","v"].includes(display.filter);
@@ -223,6 +214,26 @@ function updateLogSuggestion() {
   }
 }
 
+const plain = value => Number(value.toPrecision(3)).toString().replace("-","−");
+const power = k => k===0 ? "10<sup>0</sup>" : "10<sup>"+String(k).replace("-","−")+"</sup>";
+// Linear colorbars mark the ends and middle. Log colorbars mark each power of ten.
+function colorbarTicks(spec) {
+  const {minimum,maximum} = display;
+  const span = maximum-minimum;
+  if (!(display.log && spec.log)) return [[0,plain(minimum)],[.5,plain(minimum+span/2)],[1,plain(maximum)]];
+  const shifted = minimum<=0;
+  const low = shifted ? span*1e-3 : minimum;
+  const high = shifted ? span : maximum;
+  const first = Math.ceil(Math.log10(low)-1e-9), last = Math.floor(Math.log10(high)+1e-9);
+  const step = Math.max(1,Math.ceil((last-first+1)/6));
+  const ticks = [];
+  for (let k=first; k<=last; k+=step) {
+    const label = shifted && minimum!==0 ? plain(minimum+10**k) : power(k);
+    ticks.push([Math.log(10**k/low)/Math.log(high/low),label]);
+  }
+  return ticks;
+}
+
 function draw() {
   const image = previewFrame ?? frame;
   const spec = filters[display.filter];
@@ -233,19 +244,13 @@ function draw() {
   el("colorbar").classList.toggle("off",!showBar);
   el("colorbar").setAttribute("aria-hidden",String(!showBar));
   if (showBar) {
-    const gain = spec.exposure ? 2**display.exposure : 1;
-    const fmt = value => Number((value/gain).toPrecision(3)).toString().replace("-","−");
-    const {minimum,maximum} = display;
-    const span = maximum-minimum;
-    let middle = minimum+span/2;
-    if (display.log && spec.log) {
-      const floor = span*1e-3;
-      middle = minimum>0 ? Math.sqrt(minimum*maximum) : minimum+floor*Math.sqrt(span/floor);
-    }
-    el("barTitle").textContent = spec.title+(image.channels===3 ? " · "+channelNames[display.channel] : "");
-    el("barMaximum").value = fmt(maximum);
-    el("barMiddle").value = fmt(middle);
-    el("barMinimum").value = fmt(display.log && spec.log && minimum<=0 ? minimum+span*1e-3 : minimum);
+    el("barTitle").textContent = spec.title+(image.channels===3 && display.channel!=="rgb" ? " · "+channelNames[display.channel] : "");
+    el("barTicks").replaceChildren(...colorbarTicks(spec).map(([position,label]) => {
+      const tick = document.createElement("output");
+      tick.style.setProperty("--at",position*100+"%");
+      tick.innerHTML = label;
+      return tick;
+    }));
     // Phones lay the colorbar under the image, so its gradient runs left to right.
     const horizontal = narrow.matches;
     if (barMap!==display.map+horizontal) {
@@ -417,7 +422,10 @@ for (const button of document.querySelectorAll("[data-spp]")) {
     renderCamera();
   });
 }
-el("preset").addEventListener("change",renderCamera);
+el("preset").addEventListener("change",() => {
+  el("sceneName").textContent = el("preset").selectedOptions[0].text;
+  renderCamera();
+});
 el("sourceMode").addEventListener("change",() => {updateSourceControls(); renderCamera();});
 
 function stepDepth(delta) {
@@ -432,8 +440,7 @@ el("depthUp").addEventListener("click",() => stepDepth(1));
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);
-    if (id === "exposure") {display.exposure = Number(field.value); draw();}
-    else if (sceneSliders.includes(id)) previewSlider();
+    if (sceneSliders.includes(id)) previewSlider();
   });
   // Releasing a scene slider (or each arrow-key step) starts the full render.
   if (sceneSliders.includes(id)) field.addEventListener("change",() => {
@@ -442,7 +449,7 @@ for (const [id,{field}] of Object.entries(controls)) {
     renderCamera();
   });
 }
-el("filter").addEventListener("change",() => {rgbMemory = undefined; changeFilter();});
+el("filter").addEventListener("change",() => {filterMemory = undefined; changeFilter();});
 el("map").addEventListener("change",() => {display.map = el("map").value; draw();});
 el("log").addEventListener("change",() => {display.log = el("log").checked; updateLogSuggestion(); draw();});
 el("showColorbar").addEventListener("change",draw);
@@ -459,6 +466,7 @@ for (const id of ["minimum","maximum"]) el(id).addEventListener("input",() => {
 // The channel switch on the image is a display choice, so it never re-renders.
 const viewSwitch = el("viewSwitch");
 viewSwitch.addEventListener("change",event => {
+  hideOrbitHint();
   display.channel = event.target.value === "rgb" ? "rgb" : Number(event.target.value);
   updateFilterOptions();
   updateLogSuggestion();
@@ -513,6 +521,7 @@ let hintTimer = setTimeout(hideOrbitHint,8000);
 function hideOrbitHint() {
   clearTimeout(hintTimer);
   el("orbitHint").classList.add("gone");
+  el("channelHint").classList.add("gone");
 }
 
 stage.addEventListener("pointerdown",event => {
@@ -564,8 +573,8 @@ el("reset").addEventListener("click",() => {
   renderCamera();
 });
 
-// Analyzer: a linear polarizer angle on the same 0–180° scale as before.
-slider("analyzerControl","analyzer","Analyzer angle",0,180,1,0,value => value+"°");
+// Analyzer: a linear polarizer angle from −90° to +90°, centered at 0°.
+slider("analyzerControl","analyzer","Analyzer angle",-90,90,1,0,value => String(value).replace("-","−")+"°");
 function setAnalyzer() {
   display.angle = Number(controls.analyzer.field.value);
   updateSlider("analyzer");

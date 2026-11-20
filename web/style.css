@@ -72,6 +72,13 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 .page-credit { margin-top: 6px; color: var(--muted); font-size: .875rem; }
 .page-credit a { color: inherit; text-decoration: underline; text-underline-offset: .2em; }
 .page-credit a:hover { color: var(--ink); }
+.scene-name {
+  margin-top: clamp(14px, 2vw, 22px);
+  font-family: var(--display);
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  font-weight: 500;
+  letter-spacing: var(--d-track-sm);
+}
 .page-footer {
   padding: 8px var(--gutter) calc(28px + env(safe-area-inset-bottom));
   text-align: center;
@@ -164,14 +171,17 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 }
 .colorbar.off { visibility: hidden; opacity: 0; }
 #barGradient { box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%); }
-.bar-ticks {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 2.6em;
-  margin-block: -.5em;
+.bar-ticks { position: relative; min-width: 3em; }
+.bar-ticks output {
+  position: absolute;
+  left: 0;
+  bottom: var(--at);
+  padding-left: 6px;
+  transform: translateY(50%);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.bar-ticks output { position: relative; padding-left: 6px; font-variant-numeric: tabular-nums; }
+.bar-ticks sup { font-size: .75em; line-height: 0; }
 .bar-ticks output::before {
   content: "";
   position: absolute;
@@ -214,10 +224,17 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 .export-badge.ready { background: var(--ink); color: var(--paper); }
 
 /* Channel switch in the image's top-right corner. */
-.view-switch {
+.view-corner {
   position: absolute;
   inset-block-start: 10px;
   inset-inline-end: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.view-switch {
+  pointer-events: auto;
   display: flex;
   border: 1px solid rgb(255 255 255 / 22%);
   background: rgb(11 11 10 / 62%);
@@ -254,6 +271,32 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 .view-switch label:hover span { color: #fff; }
 .view-switch input:checked + span { background: var(--paper); color: var(--ink); }
 .view-switch input:focus-visible + span { outline: 1px solid #fff; outline-offset: -3px; }
+
+/* Channel hint: points at the channel switch on load, like the orbit hint. */
+.channel-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-family: var(--display);
+  font-size: .75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity .6s var(--ease), visibility .6s;
+}
+.channel-hint span { padding: 4px 9px; border: 1px solid rgb(255 255 255 / 35%); background: rgb(11 11 10 / 60%); }
+.channel-hint svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px rgb(0 0 0 / 60%));
+  animation: nudge-x 1.6s var(--ease) infinite alternate;
+}
+.channel-hint.gone { opacity: 0; visibility: hidden; }
 
 /* Orbit hint: four arrows around "Drag to orbit", shown over the image on load. */
 .orbit-overlay {
@@ -302,7 +345,7 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 .card { border: 1px solid var(--line); background: var(--mat); }
 .panel-switch {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
   border-bottom: 1px solid var(--line);
 }
 .panel-switch button {
@@ -463,7 +506,6 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; opacity:
 .toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
 .toggle input[type="checkbox"]:disabled { opacity: .4; cursor: not-allowed; }
 .range input { flex: 1; width: 0; }
-.range > span:first-child { flex: none; margin-right: auto; }
 .range-dash { color: var(--faint); }
 
 details { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -522,6 +564,12 @@ dt, .hint { color: var(--muted); }
 .hint.error { color: var(--error); }
 
 .filter-panel select { width: 100%; font-weight: 600; }
+.adjustments { margin-top: 12px; padding-top: 10px; }
+.adjustments summary { font-size: .8125rem; }
+.adjustments .row { font-size: .8125rem; }
+.stack { display: grid; gap: 4px; margin: 10px 0; font-size: .8125rem; }
+.stack select { width: 100%; font-weight: 400; }
+.range { display: flex; align-items: center; gap: 6px; }
 .view-hint { margin: 10px 0 0; color: var(--muted); font-size: .8125rem; }
 
 /* Light Source and Filter sit side by side on wider screens and stack on phones. */
@@ -703,8 +751,8 @@ dt, .hint { color: var(--muted); }
   /* Horizontal colorbar under the image keeps the render full width and centered on phones. */
   .figure { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .colorbar { grid-template-columns: none; grid-template-rows: 10px auto auto; gap: 4px; padding: 0; }
-  .bar-ticks { flex-direction: row-reverse; min-width: 0; margin: 0 -.6em; }
-  .bar-ticks output { padding: 6px 0 0; }
+  .bar-ticks { min-width: 0; height: 1.9em; }
+  .bar-ticks output { top: 0; bottom: auto; left: var(--at); padding: 7px 0 0; transform: translateX(-50%); }
   .bar-ticks output::before { left: 50%; top: -4px; width: 0; height: 7px; border-top: 0; border-left: 1px solid var(--faint); }
   .bar-title { writing-mode: horizontal-tb; transform: none; font-size: .75rem; }
   /* Only reserve room under the image when a colorbar is actually shown. */
