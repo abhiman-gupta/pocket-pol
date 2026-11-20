@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=33";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=33";
+import {clamp,defaultScene} from "./scene.mjs?v=34";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=34";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
-const worker = new Worker(new URL("./worker.mjs?v=33",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=34",import.meta.url),{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
@@ -89,7 +89,7 @@ function readSettings() {
 
 function updateButtons() {
   const dirty = loadedSettings !== undefined && JSON.stringify(readSettings()) !== loadedSettings;
-  const fields = ["spp","max_depth","rr_depth"].map(el);
+  const fields = ["spp","max_depth"].map(el);
   for (const field of fields) field.classList.toggle("invalid",!field.validity.valid);
   const invalid = fields.some(field => !field.validity.valid);
   el("sppError").hidden = el("spp").validity.valid;
@@ -341,7 +341,7 @@ function stop() {
   worker.postMessage({type:"stop"});
 }
 estimateAction.addEventListener("click",stop);
-for (const id of ["preset","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
+for (const id of ["preset","max_depth","spp"]) el(id).addEventListener("input",updateButtons);
 el("sourceMode").addEventListener("change",() => {updateSourceControls(); renderCamera();});
 for (const group of document.querySelectorAll(".segmented")) {
   group.addEventListener("change",event => {

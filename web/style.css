@@ -460,7 +460,7 @@ dt, .hint { color: var(--muted); }
 .filter-panel select { width: 100%; font-weight: 600; }
 .view-hint { margin: 10px 0 0; color: var(--muted); font-size: .8125rem; }
 
-/* Light Source and Filter sit side by side so both stay in reach, especially on phones. */
+/* Light Source and Filter sit side by side on wider screens and stack on phones. */
 .source-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
 .source-filter .card { padding: 14px 12px 16px; }
 /* When the sidebar is wide enough, give the light sliders room for their labels and values on one line
@@ -537,6 +537,9 @@ dt, .hint { color: var(--muted); }
   .spp-presets button { min-height: 40px; }
 }
 @media (max-width: 540px) {
+  /* Stack Light Source and Filter on phones so neither leaves empty space beside the other
+     and the slider labels and filter names fit on one line. */
+  .source-filter { grid-template-columns: minmax(0, 1fr); }
   .viewer-footer { gap: 8px; }
   .orbit-hint { font-size: .75rem; }
   /* Horizontal colorbar under the image keeps the render full width and centered on phones. */

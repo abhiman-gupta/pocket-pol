@@ -72,7 +72,9 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Light slider labels on one line.** Degree of polarization, angle of polarization, and ellipticity labels and values are one point smaller, and when the sidebar is at least 360 px wide the Light Source card is wider than Filter beside it, so each label and value fit on one line even at 100% DoP or −90.0°. Narrower sidebars (phones, and desktops around 1024 px) keep equal cards so the filter name is not cut off, and wrap the two long labels.
 
-- [ ] **Phone layout for Light Source and Filter.** On phones the Filter card sits beside the taller Light Source column. Filter no longer stretches to match its height, which removes the empty space inside the card with RGB Intensity, but the column next to Light Source is still empty. Revisit the arrangement for readability.
+- [x] **Phone layout for Light Source and Filter.** On phones (540 px and narrower) Light Source and Filter stack as full-width cards, so neither leaves empty space beside the other and the slider labels, values, and filter names fit on one line. Wider screens keep them side by side.
+
+- [x] **Russian roulette off for now.** Paths run to the max depth with no Russian roulette, and the RR starts at field is gone from Advanced path settings. The code stays in both the CPU tracer and the WebGPU shader: `rr_depth` defaults to 0, which turns it off, and any positive value turns it back on from that depth. With the old defaults (max depth 4, RR from 8) it never fired, so default renders are unchanged.
 
 - [x] **Match abhimangupta.com.** Use the site's warm paper palette (#ecebe6, #f8f7f3, ink #121211, lines #cfcdc6), DM Mono for display text and DM Sans for body text, square corners, 1px rules, no shadows, and small uppercase tracked labels. Light theme only, like the site. Title is “Pocket Pol”, centered, with the subtitle centered beneath.
 

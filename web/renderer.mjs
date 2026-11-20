@@ -1,5 +1,5 @@
-import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=33";
-import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=33";
+import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=34";
+import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=34";
 
 const EPS = .0001;
 const PI = Math.PI;
@@ -93,7 +93,8 @@ function trace(scene,origin,ray,random,{max_depth,rr_depth}) {
     }
     const brightest = Math.max(...beta);
     if (brightest<=0) break;
-    if (depth+1 >= rr_depth) {
+    // Russian roulette is off while rr_depth is 0 (the default); set rr_depth to re-enable it.
+    if (rr_depth && depth+1 >= rr_depth) {
       const probability = Math.min(.95,brightest);
       if (random() >= probability) break;
       for (let c=0; c<channels; c++) beta[c] /= probability;

@@ -12,7 +12,7 @@ struct Material {
 struct Hit { distance: f32, index: u32, normal: vec3f }
 struct LightSample { direction: vec3f, pdf: f32, cosine: f32 }
 struct Params {
-  config: vec4u, // size, max depth, RR depth, light index
+  config: vec4u, // size, max depth, RR depth (0 = off), light index
   eye: vec4f, // w is half of the camera plane height
   forward: vec4f,
   right: vec4f,
@@ -228,7 +228,8 @@ fn trace_mueller(ray_origin: vec3f, ray_direction: vec3f, rng: ptr<function,u32>
       brightest = max(brightest,beta[c]);
     }
     if (brightest <= 0) { break; }
-    if (depth+1u >= params.config.z) {
+    // Russian roulette is off while RR depth is 0 (the default); set rr_depth to re-enable it.
+    if (params.config.z != 0u && depth+1u >= params.config.z) {
       let probability = min(.95,brightest);
       if (random(rng) >= probability) { break; }
       for (var c=0u; c<channels; c++) { beta[c] /= probability; }

@@ -40,7 +40,7 @@ function box(center,angle,halfHeight,material) {
 }
 
 export const defaultScene = Object.freeze({
-  preset:"cornell", channels:"rgb", size:512, max_depth:4, rr_depth:8,
+  preset:"cornell", channels:"rgb", size:512, max_depth:4, rr_depth:0,
   light_scale:1, source_dop:0, source_aolp:0, source_ellipticity:0, yaw:0, pitch:0, distance:1,
 });
 
