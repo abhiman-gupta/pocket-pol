@@ -75,7 +75,7 @@ async function nextBatch() {
   }
 }
 
-async function renderExport({settings,samples,seed,forceCpu}) {
+async function renderFilm({type,settings,samples,seed,forceCpu}) {
   let gpuEstimate;
   if (!forceCpu) {
     try {
@@ -95,15 +95,25 @@ async function renderExport({settings,samples,seed,forceCpu}) {
       gpuEstimate?.dispose();
     }
   }
-  const cpuEstimate = new Estimate(settings,seed);
+  const cpuSettings = type==="preview" ? {...settings,size:Math.min(settings.size,64)} : settings;
+  const cpuEstimate = new Estimate(cpuSettings,seed);
   cpuEstimate.addSamples(samples);
   return cpuEstimate.frame();
 }
 
 self.onmessage = async ({data}) => {
+  if (data.type === "preview") {
+    try {
+      const frame = await renderFilm(data);
+      postMessage({type:"preview",frame},[frame.pixels.buffer]);
+    } catch {
+      postMessage({type:"preview"});
+    }
+    return;
+  }
   if (data.type === "export") {
     try {
-      const frame = await renderExport(data);
+      const frame = await renderFilm(data);
       postMessage({type:"exported",frame},[frame.pixels.buffer]);
     } catch (error) {
       postMessage({type:"export-error",message:error.message});

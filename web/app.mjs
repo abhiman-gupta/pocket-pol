@@ -7,10 +7,12 @@ const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const worker = new Worker(new URL("./worker.mjs?v=3",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=4",import.meta.url),{type:"module"});
 const controls = {};
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
 let frame;
+let previewFrame;
+let previewRequest;
 let loadedSettings;
 let running = false;
 let stopping = false;
@@ -79,14 +81,15 @@ function readSettings() {
 function updateButtons() {
   const dirty = JSON.stringify(readSettings()) !== loadedSettings;
   const invalid = !el("spp").validity.valid || !el("max_depth").validity.valid || !el("rr_depth").validity.valid;
-  const busy = running || Boolean(exportRequest) || Boolean(drag?.moved);
+  const cameraBusy = Boolean(drag?.moved || previewRequest || cameraRenderPending);
+  const busy = running || Boolean(exportRequest) || cameraBusy;
   el("fresh").disabled = busy || invalid;
   el("continue").disabled = busy || !frame || dirty || invalid;
   el("stop").disabled = !running || stopping;
   el("scene").disabled = busy;
   el("camera").disabled = busy;
-  el("export").disabled = !frame || Boolean(exportRequest) || Boolean(drag?.moved) || (running && needsDefaultCamera(frame));
-  el("sceneChanges").hidden = running || Boolean(drag?.moved) || !frame || !dirty;
+  el("export").disabled = !frame || Boolean(exportRequest) || cameraBusy || (running && needsDefaultCamera(frame));
+  el("sceneChanges").hidden = running || cameraBusy || !frame || !dirty;
   el("progress").classList.toggle("active",running);
 }
 
@@ -140,8 +143,9 @@ function changeFilter() {
 }
 
 function draw() {
+  const image = previewFrame ?? frame;
   const spec = filters[display.filter];
-  const showBar = Boolean(frame) && !spec.rgb && el("showColorbar").checked;
+  const showBar = Boolean(image) && !spec.rgb && el("showColorbar").checked;
   el("colorbar").hidden = !showBar;
   if (showBar) {
     const gain = spec.exposure ? 2**display.exposure : 1;
@@ -154,9 +158,9 @@ function draw() {
       el("barGradient").style.background = colorbar(barMap);
     }
   }
-  if (!frame) return;
-  if (canvas.width!==frame.size) canvas.width = canvas.height = frame.size;
-  context.putImageData(new ImageData(displayPixels(frame,display),frame.size,frame.size),0,0);
+  if (!image) return;
+  if (canvas.width!==image.size) canvas.width = canvas.height = image.size;
+  context.putImageData(new ImageData(displayPixels(image,display),image.size,image.size),0,0);
 }
 
 function begin(fresh,startup = false) {
@@ -166,6 +170,7 @@ function begin(fresh,startup = false) {
   if (!Number.isInteger(requested) || !el("spp").validity.valid) return;
   if (fresh) {
     frame = undefined;
+    previewFrame = undefined;
     exportCache = undefined;
     loadedSettings = JSON.stringify(settings);
     el("completed").textContent = "0 SPP";
@@ -186,6 +191,7 @@ function fail(message) {
   running = false;
   stopping = false;
   cameraRenderPending = false;
+  previewRequest = previewFrame = undefined;
   loadedSettings = undefined;
   el("status").textContent = "Render failed";
   el("error").textContent = message;
@@ -200,6 +206,15 @@ worker.onerror = event => {
 };
 worker.onmessage = ({data}) => {
   if (data.type === "exported" || data.type === "export-error") {finishExport(data); return;}
+  if (data.type === "preview") {
+    if (previewRequest === drag && drag?.moved && data.frame) {
+      previewFrame = data.frame;
+      draw();
+    }
+    previewRequest = undefined;
+    advanceCameraRender();
+    return;
+  }
   if (data.type === "target") { requested = data.samples; return; }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
@@ -209,12 +224,8 @@ worker.onmessage = ({data}) => {
   if (data.type === "stopped") {
     if (!stopping) return;
     running = stopping = false;
-    el("status").textContent = "Stopped · "+(frame?.samples ?? 0)+" SPP";
-    updateButtons();
-    if (cameraRenderPending) {
-      cameraRenderPending = false;
-      begin(true);
-    }
+    el("status").textContent = drag?.moved ? "Camera preview" : "Stopped · "+(frame?.samples ?? 0)+" SPP";
+    advanceCameraRender();
     return;
   }
   const first = !frame;
@@ -298,14 +309,31 @@ function applyZoom() {
   canvas.style.transform = "scale("+controls.zoom.field.value+")";
 }
 
-function renderCamera() {
-  updateButtons();
-  if (running) {
-    cameraRenderPending = true;
-    stop();
-  } else {
-    begin(true);
+function advanceCameraRender() {
+  if (!running && !previewRequest) {
+    if (drag?.moved && drag.previewDirty) {
+      drag.previewDirty = false;
+      previewRequest = drag;
+      const settings = readSettings();
+      settings.size /= 2;
+      worker.postMessage({type:"preview",settings,samples:1,seed:0,forceCpu});
+    } else if (!drag?.moved && cameraRenderPending) {
+      cameraRenderPending = false;
+      previewFrame = undefined;
+      el("status").textContent = "Camera changed";
+      updateButtons();
+      begin(true);
+      if (!running) draw();
+      return;
+    }
   }
+  updateButtons();
+}
+
+function renderCamera() {
+  cameraRenderPending = true;
+  stop();
+  advanceCameraRender();
 }
 stage.addEventListener("pointerdown",event => {
   if (exportRequest || !event.isPrimary || event.button!==0) return;
@@ -319,12 +347,15 @@ stage.addEventListener("pointermove",event => {
   if (!drag.moved) {
     if (exportRequest || Math.hypot(dx,dy)<2) return;
     drag.moved = true;
+    cameraRenderPending = false;
     stage.classList.add("orbiting");
     stop();
-    updateButtons();
+    el("status").textContent = "Camera preview";
   }
   yaw = drag.yaw-dx*.2;
   pitch = clamp(drag.pitch+dy*.2,-80,80);
+  drag.previewDirty = true;
+  advanceCameraRender();
 });
 stage.addEventListener("lostpointercapture",event => {
   if (drag?.id!==event.pointerId) return;
