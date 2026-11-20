@@ -127,7 +127,8 @@ function setOptions(element,entries) {
 
 const frameChannels = () => frame?.channels ?? (defaultScene.channels==="rgb" ? 3 : 1);
 
-// RGB offers only the RGB filters and a single channel only the scalar ones. Switching maps
+// Every filter is listed, but RGB filters show in the RGB view and the others in one channel.
+// Picking a filter moves the channel switch to match (Green for single-channel filters). Switching maps
 // Intensity and Analyzer to their counterparts, and switching straight back restores the filter
 // that was showing before.
 const counterpart = {rgbIntensity:"intensity",rgbAnalyzer:"analyzer",intensity:"rgbIntensity",analyzer:"rgbAnalyzer"};
@@ -135,7 +136,7 @@ function updateFilterOptions(wanted = display.filter) {
   const rgbFrame = frameChannels() === 3;
   const rgbView = rgbFrame && display.channel === "rgb";
   el("viewSwitch").hidden = !rgbFrame;
-  const entries = Object.entries(filters).filter(([,spec]) => Boolean(spec.rgb) === rgbView);
+  const entries = Object.entries(filters).filter(([,spec]) => rgbFrame || !spec.rgb);
   setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title]));
   if (Boolean(filters[wanted].rgb) !== rgbView) {
     const previous = wanted;
@@ -449,7 +450,15 @@ for (const [id,{field}] of Object.entries(controls)) {
     renderCamera();
   });
 }
-el("filter").addEventListener("change",() => {filterMemory = undefined; changeFilter();});
+el("filter").addEventListener("change",() => {
+  filterMemory = undefined;
+  const rgbFilter = Boolean(filters[el("filter").value].rgb);
+  if (frameChannels() === 3 && rgbFilter !== (display.channel === "rgb")) {
+    display.channel = rgbFilter ? "rgb" : 1;
+    viewSwitch.querySelector(`input[value="${display.channel}"]`).checked = true;
+  }
+  changeFilter();
+});
 el("map").addEventListener("change",() => {display.map = el("map").value; draw();});
 el("log").addEventListener("change",() => {display.log = el("log").checked; updateLogSuggestion(); draw();});
 el("showColorbar").addEventListener("change",draw);
