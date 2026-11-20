@@ -8,6 +8,12 @@ A physically based polarization renderer that runs entirely in your browser.
 
 The app lives in [`web/`](web/). See [`web/README.md`](web/README.md) for running it locally and for the headless renderer.
 
+## A first for the browser
+
+To our knowledge, Pocket Pol is the first browser-based full-Stokes polarized path tracer. Every path carries a Stokes vector (I, Q, U, V) per RGB channel and accumulates 4 × 4 Mueller matrices at each bounce, with next-event estimation and multiple importance sampling, in a WebGPU compute shader with a matching JavaScript CPU fallback.
+
+A literature and web search in November 2026 found polarized path tracers only as native software, such as [Mitsuba 3](https://mitsuba.readthedocs.io/en/stable/src/key_topics/polarization.html), the ART research renderer, and [DirectX ray tracing](https://github.com/viktor4006094/DegreeProject) and Apple Metal prototypes. Browser path tracers such as [strahl](https://arxiv.org/abs/2407.19977) render unpolarized light, and browser polarization tools such as [BeamBench](https://github.com/visuphy/BeamBench) simulate optical benches with Jones calculus rather than rendering scenes. If you know of an earlier browser-based polarized path tracer, please open an issue and we will credit it here.
+
 ## Credits
 
 Pocket Pol brings the polarization models of [Pollia](https://github.com/cmtribble3/pollia) to the browser. Pollia is a research renderer for polarized light transport, built as a fork of [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3) and developed by Charlie Tribble, Abhiman Gupta, and Matthew Kupinski. Pocket Pol adapts Pollia's interactive window, its implementation of the Jarecki material model, its polarized emitter and Mueller transport, and its display filters and color maps.

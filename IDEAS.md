@@ -71,6 +71,8 @@ The initial browser version follows the features in Pollia's window.
 
 Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumulation in both the browser and headless renderer.
 
+- [x] **“First browser-based full-Stokes polarized path tracer” claim.** Added to the README, worded as “to our knowledge”, after a November 2026 search. Polarized path tracers found were all native (Mitsuba 3, ART, Enfeldt's DXR thesis, a Metal near-real-time tracer from SPIE 2025, small C++ projects). Browser path tracers found (strahl/WebGPU-OpenPBR, MuTracer, three.js PathTracing renderer) are unpolarized. Browser polarization tools found (BeamBench, visuphy, Polarilab, MechSimulator) are Jones-calculus or Malus's-law optical benches, not scene renderers. Recheck before using the claim in papers or talks.
+
 ## Naming ideas
 
 - **Pocket Pol** (`pocket-pol`) is the chosen name, short for **Pocket Polarization**. Web Pol was an earlier candidate.
