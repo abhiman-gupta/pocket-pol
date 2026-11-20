@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=43";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=43";
-import {setupExport} from "./export.mjs?v=43";
+import {clamp,defaultScene} from "./scene.mjs?v=44";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=44";
+import {setupExport} from "./export.mjs?v=44";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=43",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=44",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -27,6 +27,8 @@ let pitch = defaultScene.pitch;
 let cameraRenderPending = false;
 let renderTimer;
 let barMap;
+let hintShown = false;
+let hintTimer;
 let filterMemory;
 let suggestionCache;
 // Full-resolution throughput, used to estimate export times.
@@ -248,6 +250,11 @@ function draw() {
   const spec = filters[display.filter];
   stage.classList.toggle("preview",Boolean(previewFrame));
   el("stageMessage").hidden = Boolean(image) || (!running && !cameraRenderPending && el("error").hidden);
+  // CSS holds the orbit and channel hints while the "Rendering…" message shows; their timer starts with the first image.
+  if (image && !hintShown) {
+    hintShown = true;
+    hintTimer = setTimeout(hideOrbitHint,8000);
+  }
   const showBar = Boolean(image) && !spec.rgb && el("showColorbar").checked;
   // Keep the colorbar's space reserved so the image never shifts between filters.
   el("colorbar").classList.toggle("off",!showBar);
@@ -533,7 +540,7 @@ function renderCamera() {
 }
 
 // The orbit hint covers the image on load and fades at the first interaction.
-let hintTimer = setTimeout(hideOrbitHint,8000);
+
 function hideOrbitHint() {
   clearTimeout(hintTimer);
   el("orbitHint").classList.add("gone");

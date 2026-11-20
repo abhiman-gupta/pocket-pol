@@ -312,7 +312,7 @@ h1, h2, h3, dl, dd, p { margin: 0; }
   pointer-events: none;
   transition: opacity .6s var(--ease), visibility .6s;
 }
-.orbit-overlay.gone { opacity: 0; visibility: hidden; }
+.orbit-overlay.gone, #stage:has(.stage-message:not([hidden])) :is(.orbit-overlay, .channel-hint) { opacity: 0; visibility: hidden; }
 .orbit-label {
   grid-area: label;
   padding: 6px 12px;
