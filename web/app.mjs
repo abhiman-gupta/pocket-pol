@@ -146,7 +146,7 @@ function draw() {
   context.putImageData(new ImageData(displayPixels(frame,display),frame.size,frame.size),0,0);
 }
 
-function begin(fresh,wantedFilter = display.filter) {
+function begin(fresh,wantedFilter = display.filter,startup = false) {
   if (running || drag || el(fresh ? "fresh" : "continue").disabled) return;
   const settings = readSettings();
   requested = el("spp").valueAsNumber;
@@ -166,7 +166,7 @@ function begin(fresh,wantedFilter = display.filter) {
   el("progress").value = 0;
   el("status").textContent = "Rendering…";
   updateButtons();
-  worker.postMessage({type:fresh ? "fresh" : "continue",settings,samples:requested,forceCpu});
+  worker.postMessage({type:fresh ? "fresh" : "continue",settings,samples:requested,forceCpu,startup});
 }
 
 function fail(message) {
@@ -182,6 +182,7 @@ function fail(message) {
 
 worker.onerror = event => fail(event.message || "Could not start the render worker.");
 worker.onmessage = ({data}) => {
+  if (data.type === "target") { requested = data.samples; return; }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
     return;
@@ -216,6 +217,29 @@ worker.onmessage = ({data}) => {
 };
 
 el("estimateForm").addEventListener("submit",event => {event.preventDefault(); begin(true);});
+const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+function selectPanel(selected) {
+  for (const tab of tabs) {
+    const active = tab === selected;
+    tab.setAttribute("aria-selected",String(active));
+    tab.tabIndex = active ? 0 : -1;
+    el(tab.getAttribute("aria-controls")).hidden = !active;
+  }
+}
+for (const tab of tabs) {
+  tab.addEventListener("click",() => selectPanel(tab));
+  tab.addEventListener("keydown",event => {
+    const index = tabs.indexOf(tab);
+    const target = {
+      ArrowLeft:tabs[(index+tabs.length-1)%tabs.length], ArrowRight:tabs[(index+1)%tabs.length],
+      Home:tabs[0], End:tabs.at(-1),
+    }[event.key];
+    if (!target) return;
+    event.preventDefault();
+    selectPanel(target);
+    target.focus();
+  });
+}
 el("continue").addEventListener("click",() => begin(false));
 function stop() {
   if (!running || stopping) return;
@@ -310,4 +334,4 @@ el("saveChannels").addEventListener("click",() => {
 });
 
 updateFilterOptions();
-begin(true);
+begin(true,display.filter,true);
