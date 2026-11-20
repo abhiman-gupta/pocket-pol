@@ -103,7 +103,7 @@ function trace(scene,origin,ray,random,{max_depth,rr_depth}) {
 }
 
 export class Estimate {
-  constructor(settings,seed = 0) {
+  constructor(settings,seed = 0,rows = [0,settings.size]) {
     this.settings = {...settings};
     this.scene = makeScene(settings);
     this.size = settings.size;
@@ -111,7 +111,9 @@ export class Estimate {
     this.seed = seed >>> 0;
     this.samples = 0;
     this.batches = [];
-    this.sum = new Float64Array(this.size*this.size*this.channels*4);
+    this.firstPixel = rows[0]*this.size;
+    this.lastPixel = rows[1]*this.size;
+    this.sum = new Float64Array((this.lastPixel-this.firstPixel)*this.channels*4);
   }
 
   addSamples(count) {
@@ -124,7 +126,7 @@ export class Estimate {
       return (state>>>8)/16777216;
     };
     for (let sample=first; sample<first+count; sample++) {
-      for (let pixel=0; pixel<size*size; pixel++) {
+      for (let pixel=this.firstPixel; pixel<this.lastPixel; pixel++) {
         state = this.seed ^ Math.imul(pixel,747796405) ^ Math.imul(sample,2891336453);
         const u = (2*((pixel%size+random())/size)-1)*halfHeight;
         const v = (1-2*((Math.floor(pixel/size)+random())/size))*halfHeight;
@@ -132,7 +134,7 @@ export class Estimate {
         const values = trace(scene,eye,ray,random,settings);
         for (let c=0; c<channels; c++) {
           const value = sensorStokes(values[c],ray,up);
-          const offset = (pixel*channels+c)*4;
+          const offset = ((pixel-this.firstPixel)*channels+c)*4;
           for (let s=0; s<4; s++) sum[offset+s] += value[s];
         }
       }

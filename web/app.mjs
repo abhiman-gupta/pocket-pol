@@ -9,6 +9,7 @@ const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const worker = new Worker(new URL("./worker.mjs",import.meta.url),{type:"module"});
 const controls = {};
+const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
 let frame;
 let loadedSettings;
 let running = false;
@@ -155,7 +156,7 @@ function begin(fresh,wantedFilter = display.filter) {
     loadedSettings = JSON.stringify(settings);
     context.clearRect(0,0,canvas.width,canvas.height);
     el("completed").textContent = "0 SPP";
-    for (const id of ["batch","delivery","dimensions"]) el(id).textContent = "—";
+    for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
     updateFilterOptions(wantedFilter);
     draw();
   }
@@ -165,7 +166,7 @@ function begin(fresh,wantedFilter = display.filter) {
   el("progress").value = 0;
   el("status").textContent = "Rendering…";
   updateButtons();
-  worker.postMessage({type:fresh ? "fresh" : "continue",settings,samples:requested});
+  worker.postMessage({type:fresh ? "fresh" : "continue",settings,samples:requested,forceCpu});
 }
 
 function fail(message) {
@@ -181,6 +182,10 @@ function fail(message) {
 
 worker.onerror = event => fail(event.message || "Could not start the render worker.");
 worker.onmessage = ({data}) => {
+  if (data.type === "fallback") {
+    console.warn("Pocket Pol is using its CPU renderer.",data.message);
+    return;
+  }
   if (data.type === "error") {fail(data.message); return;}
   if (data.type === "stopped") {
     if (!stopping) return;
@@ -196,6 +201,7 @@ worker.onmessage = ({data}) => {
   const first = !frame;
   frame = data.frame;
   el("completed").textContent = frame.samples+" SPP";
+  el("backend").textContent = data.backend;
   el("dimensions").textContent = frame.size+" × "+frame.size;
   el("batch").textContent = data.renderMs.toFixed(2)+" ms";
   el("delivery").textContent = Math.max(0,performance.timeOrigin+performance.now()-data.sentAt).toFixed(2)+" ms";

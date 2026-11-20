@@ -2,7 +2,8 @@ import {parseArgs} from "node:util";
 import {writeFile} from "node:fs/promises";
 import {deflateSync} from "node:zlib";
 import {defaultScene} from "./scene.mjs";
-import {Estimate,exportChannels} from "./renderer.mjs";
+import {exportChannels} from "./renderer.mjs";
+import {defaultWorkers,renderHeadless,renderHeadlessGpu} from "./headless.mjs";
 import {displayDefaults,displayPixels,filters} from "./display.mjs";
 import {crc32} from "./files.mjs";
 
@@ -12,6 +13,8 @@ Options:
   --channels rgb|mono                 Default: rgb
   --spp positive integer              Default: 256
   --seed uint32                       Default: 0
+  --backend auto|cpu|webgpu           Default: auto
+  --workers 1–32                      Default: up to 8 CPU threads
   --filter ${Object.keys(filters).join("|")}
   --channel red|green|blue             Scalar display channel
   --exposure EV --analyzer degrees    Display controls
@@ -70,6 +73,8 @@ async function main() {
     spp:{type:"string",default:"256"},
     seed:{type:"string",default:"0"},
     out:{type:"string",default:"pocket-pol-cornell"},
+    backend:{type:"string",default:"auto"},
+    workers:{type:"string"},
     filter:{type:"string"},
     channel:{type:"string",default:"red"},
     exposure:{type:"string",default:"0"},
@@ -84,16 +89,25 @@ async function main() {
   const channel = ["red","green","blue"].indexOf(values.channel);
   if (channel<0) throw new Error("--channel must be red, green or blue");
   if (!values.out.trim()) throw new Error("--out requires a file prefix");
+  if (!["auto","cpu","webgpu"].includes(values.backend)) throw new Error("--backend must be auto, cpu, or webgpu");
   const display = {...displayDefaults(filter),channel,exposure:number(values.exposure,"exposure",-8,8),
     angle:number(values.analyzer,"analyzer",-90,90)};
   const target = int(values.spp,"spp",1,0xffffffff);
   const seed = int(values.seed,"seed",0,0xffffffff);
-  const estimate = new Estimate({...defaultScene,size:Number(values.size),channels:values.channels},seed);
-  while (estimate.samples<target) {
-    estimate.addSamples(Math.min(8,target-estimate.samples));
-    console.error(estimate.samples+" / "+target+" SPP");
+  const workers = values.workers === undefined ? defaultWorkers : int(values.workers,"workers",1,32);
+  const settings = {...defaultScene,size:Number(values.size),channels:values.channels};
+  const onProgress = samples => console.error(samples+" / "+target+" SPP");
+  let frame;
+  if (values.backend !== "cpu") {
+    try {
+      frame = await renderHeadlessGpu(settings,seed,target,onProgress);
+    } catch (error) {
+      if (values.backend === "webgpu") throw error;
+      console.error("WebGPU unavailable. Using CPU workers.",error.message);
+    }
+    if (!frame && values.backend === "webgpu") throw new Error("Install the optional webgpu package to use --backend webgpu");
   }
-  const frame = estimate.frame();
+  frame ??= await renderHeadless(settings,seed,target,workers,onProgress);
   const {bytes,metadata} = exportChannels(frame);
   const png = encodePng(frame.size,displayPixels(frame,display));
   await Promise.all([
