@@ -2,38 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pocket Polarization: A web-based physically based renderer</title>
-  <link rel="stylesheet" href="./style.css?v=16">
-  <script type="module" src="./app.mjs?v=10"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ecebe6">
+  <meta name="description" content="A physically based polarization renderer on the web.">
+  <title>Pocket Pol: A physically based polarization renderer on the web</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23121211'/%3E%3Cellipse cx='16' cy='16' rx='10' ry='4.5' transform='rotate(-35 16 16)' fill='none' stroke='%23ecebe6' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23ecebe6'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
+  <link rel="stylesheet" href="./style.css?v=28">
+  <script type="module" src="./app.mjs?v=28"></script>
 </head>
 <body>
   <main class="window">
-    <h1 class="page-title"><strong>Pocket Polarization</strong><span class="page-subtitle">: A web-based physically based renderer</span></h1>
+    <header class="page-header">
+      <h1 class="page-title">Pocket Pol</h1>
+      <p class="page-subtitle">A physically based polarization renderer on the web</p>
+    </header>
+
     <section class="viewer" aria-label="Render viewport">
-      <h2 id="imageTitle">Cornell Box</h2>
-      <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
-        <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
-        <div id="colorbar" class="colorbar" role="group" aria-labelledby="barTitle" hidden>
-          <span id="barTitle" class="visually-hidden"></span><output id="barMaximum"></output>
-          <div id="barGradient"></div><output id="barMinimum"></output>
+      <div class="figure">
+        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag to orbit the camera.">
+          <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
+          <div id="stageMessage" class="stage-message" aria-hidden="true"><span class="spinner"></span><span id="stageMessageText">Starting renderer…</span></div>
+          <progress id="progress" aria-label="Render progress" max="1" value="0"></progress>
+        </div>
+        <div id="colorbar" class="colorbar off" role="group" aria-labelledby="barTitle">
+          <div id="barGradient"></div>
+          <div class="bar-ticks">
+            <output id="barMaximum"></output><output id="barMiddle"></output><output id="barMinimum"></output>
+          </div>
+          <span id="barTitle" class="bar-title"></span>
         </div>
       </div>
       <footer class="viewer-footer">
-        <div class="viewport-meta">
-          <span id="status" role="status" aria-live="polite">Ready</span>
-          <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
-          <span class="orbit-hint">Drag to orbit</span>
-        </div>
-        <fieldset id="export" disabled>
-          <legend class="visually-hidden">Export</legend>
-          <p id="exportStatus" class="visually-hidden" role="status"></p>
-          <button id="saveImage" type="button">Save PNG</button>
-        </fieldset>
+        <button id="rerender" type="button" title="Render again with the current settings">
+          <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M15.5 10a5.5 5.5 0 1 1-1.6-3.9M15.5 3.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Re-render
+        </button>
+        <span class="orbit-hint">Drag to orbit</span>
+        <span id="status" class="visually-hidden" role="status" aria-live="polite">Ready</span>
+        <button id="reset" type="button" disabled>
+          <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M4.5 10a5.5 5.5 0 1 0 1.6-3.9M4.5 3.5v3h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Reset camera
+        </button>
       </footer>
     </section>
+
     <aside class="sidebar" aria-label="Render controls">
-      <div class="inspector">
+      <div class="source-filter">
+      <section class="light-panel card" aria-labelledby="lightTitle">
+        <div class="section-head"><h2 id="lightTitle">Light Source</h2></div>
+        <label class="visually-hidden" for="sourceMode">Source polarization</label>
+        <select id="sourceMode">
+          <option value="unpolarized">Unpolarized</option>
+          <option value="polarized">Polarized</option>
+        </select>
+        <div id="sourceControls" hidden></div>
+      </section>
+
+      <section class="filter-panel card" aria-labelledby="filterTitle">
+        <div class="section-head"><h2 id="filterTitle">Filter</h2><span class="tag live">Live</span></div>
+        <label class="visually-hidden" for="filter">Polarization view</label>
+        <select id="filter" aria-describedby="viewHint"></select>
+        <p id="viewHint" class="view-hint" hidden></p>
+        <div id="analyzerControl" class="analyzer" hidden>
+          <div class="analyzer-head"><h3 id="analyzerLabel">Analyzer</h3><output id="analyzerValue">0°</output></div>
+          <div class="wheel-wrap">
+            <svg id="wheel" viewBox="-110 -110 220 220" role="slider" tabindex="0" aria-labelledby="analyzerLabel"
+              aria-valuemin="0" aria-valuemax="180" aria-valuenow="0" aria-valuetext="Linear 0°">
+              <circle class="rim" r="104"/>
+              <g id="wheelTicks"></g>
+              <circle class="face" r="78"/>
+              <line class="grid-line" x1="-78" y1="0" x2="78" y2="0"/>
+              <line class="grid-line" x1="0" y1="-78" x2="0" y2="78"/>
+              <g id="wheelLinear" class="rotor">
+                <line class="axis" x1="-70" y1="0" x2="70" y2="0"/>
+                <circle class="knob" cx="70" cy="0" r="7"/>
+                <circle class="knob" cx="-70" cy="0" r="7"/>
+              </g>
+              <circle class="hub" r="4"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+      </div>
+
+      <fieldset id="statistics" class="estimate-panel card">
+        <legend class="visually-hidden">Render</legend>
+        <div class="section-head"><h2>Render</h2></div>
+        <p id="sceneChanges" class="pending-changes" role="status" hidden>Scene settings changed. Start a fresh render to apply them.</p>
+        <form id="estimateForm" novalidate>
+          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="8" inputmode="numeric"></label>
+          <div class="spp-presets" role="group" aria-label="Sample presets">
+            <button type="button" data-spp="8">8</button>
+            <button type="button" data-spp="64">64</button>
+            <button type="button" data-spp="256">256</button>
+            <button type="button" data-spp="1024">1024</button>
+          </div>
+          <p id="sppError" class="hint error" hidden>Enter a whole number from 1 to 4096.</p>
+          <div class="estimate-actions">
+            <button id="estimateAction" class="primary" type="submit">Fresh render</button>
+          </div>
+        </form>
+        <details hidden>
+          <summary>Render statistics</summary>
+          <dl>
+            <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
+            <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
+            <div class="row"><dt>GPU note</dt><dd id="gpuNote">—</dd></div>
+            <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
+            <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
+            <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
+          </dl>
+        </details>
+        <p id="error" class="error-box" role="alert" hidden></p>
+      </fieldset>
+
+      <div class="inspector card">
         <div class="panel-switch" role="tablist" aria-label="Renderer settings">
           <button id="scene-tab" type="button" role="tab" aria-selected="true" aria-controls="scene-panel">Scene</button>
           <button id="display-tab" type="button" role="tab" aria-selected="false" aria-controls="display-panel" tabindex="-1">Display</button>
@@ -41,28 +128,29 @@
         </div>
         <div class="settings-panel" id="scene-panel" role="tabpanel" aria-labelledby="scene-tab">
           <fieldset id="scene" class="panel-fields">
-            <legend>Scene setup</legend>
+            <legend><span>Scene setup</span></legend>
             <label class="row">Scene
               <select id="preset"><option value="cornell">Cornell Box</option></select>
             </label>
-            <label class="row">Channels
-              <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
-            </label>
-            <label class="row">Image size
-              <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
-            </label>
-            <div id="sourceControls"></div>
+            <div class="row">
+              <span id="channelsLabel">Channels</span>
+              <div class="segmented" role="radiogroup" aria-labelledby="channelsLabel" data-target="channels">
+                <label title="RGB polarized"><input type="radio" name="channels-choice" value="rgb" checked><span>RGB</span></label>
+                <label title="Monochrome polarized"><input type="radio" name="channels-choice" value="mono"><span>Mono</span></label>
+              </div>
+              <input type="hidden" id="channels" value="rgb">
+            </div>
+            <input type="hidden" id="size" value="256">
             <details>
-              <summary>Advanced lighting and path settings</summary>
-              <div id="advancedSourceControls"></div>
-              <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
-              <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
+              <summary>Advanced path settings</summary>
+              <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4" inputmode="numeric"></label>
+              <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8" inputmode="numeric"></label>
             </details>
           </fieldset>
         </div>
         <div class="settings-panel" id="display-panel" role="tabpanel" aria-labelledby="display-tab" hidden>
           <fieldset class="panel-fields">
-            <legend>Image adjustments</legend>
+            <legend><span>Image adjustments</span><span class="tag live">Live</span></legend>
             <label class="row" id="channelRow">Display channel
               <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
             </label>
@@ -70,11 +158,12 @@
             <div id="displaySliders"></div>
             <div id="scalarControls" hidden>
               <label class="row">Color map <select id="map"></select></label>
-              <label class="row">Show colorbar <input id="showColorbar" type="checkbox" checked></label>
-              <label class="row">Log scale <input id="log" type="checkbox"></label>
+              <label class="row toggle">Show colorbar <input id="showColorbar" type="checkbox" role="switch" checked></label>
+              <label class="row toggle">Log scale <input id="log" type="checkbox" role="switch"></label>
               <div class="row range">
                 <span>Range</span>
                 <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
+                <span class="range-dash" aria-hidden="true">–</span>
                 <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
               </div>
               <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
@@ -84,43 +173,13 @@
         </div>
         <div class="settings-panel" id="camera-panel" role="tabpanel" aria-labelledby="camera-tab" hidden>
           <fieldset id="camera" class="panel-fields">
-            <legend>Scene camera</legend>
+            <legend><span>Scene camera</span><span class="tag">Fresh render</span></legend>
             <div id="cameraSliders"></div>
-            <p class="hint">Drag the viewport to orbit. Changing camera distance needs a fresh estimate. Exports use the default camera.</p>
-            <button id="reset" type="button">Reset camera</button>
+            <p class="hint">Drag the image to orbit.</p>
           </fieldset>
         </div>
       </div>
-      <section class="filter-panel" aria-labelledby="filterTitle">
-        <h2 id="filterTitle">Filter</h2>
-        <label class="visually-hidden" for="filter">Polarization view</label>
-        <select id="filter" aria-describedby="viewHint"></select>
-        <p id="viewHint" class="view-hint" hidden></p>
-        <div id="analyzerControl" hidden></div>
-      </section>
-      <fieldset id="statistics" class="estimate-panel">
-        <legend class="visually-hidden">Render</legend>
-        <h2>Render</h2>
-        <form id="estimateForm">
-          <label class="row">Samples per estimate <input id="spp" type="number" min="1" max="4096" required value="8"></label>
-          <div class="estimate-actions">
-            <button id="estimateAction" class="primary" type="submit">Fresh estimate</button>
-          </div>
-        </form>
-        <p id="sceneChanges" class="hint pending-changes" role="status" hidden>The viewport still shows the previous scene. Start a fresh estimate to apply your changes.</p>
-        <details hidden>
-          <summary>Render statistics</summary>
-          <dl>
-            <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
-            <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
-            <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
-            <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
-            <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
-          </dl>
-        </details>
-      </fieldset>
 
-      <p id="error" class="error" role="alert" hidden></p>
     </aside>
   </main>
   <footer class="page-footer">

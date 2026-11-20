@@ -1,5 +1,5 @@
-import {Estimate} from "./renderer.mjs";
-import {openGpu} from "./gpu.mjs";
+import {Estimate} from "./renderer.mjs?v=28";
+import {openGpu} from "./gpu.mjs?v=28";
 
 let gpu;
 let estimate;
@@ -25,7 +25,7 @@ async function nextBatch() {
   inFlight = true;
   try {
     const started = performance.now();
-    const count = Math.min(remaining,batchSize);
+    let count = Math.min(remaining,batchSize);
     let frame;
     let backend = "CPU";
     if (estimate.backend === "WebGPU") {
@@ -35,6 +35,8 @@ async function nextBatch() {
         lastGpuFrame = {...frame,pixels:frame.pixels.slice()};
       } catch (error) {
         postMessage({type:"fallback",message:error.message});
+        // GPU batches can be 64 samples; one CPU sample at 256 × 256 takes ~0.3 s, so restart small.
+        count = Math.min(count,1);
         const cpu = new Estimate(estimate.settings);
         if (lastGpuFrame) {
           const {pixels,samples,batches} = lastGpuFrame;
@@ -84,6 +86,10 @@ async function renderFilm({type,settings,samples,seed,forceCpu}) {
       }
     } catch (error) {
       postMessage({type:"fallback",message:error.message});
+      // Stop retrying a broken GPU on every preview frame, as fresh renders already do.
+      const failed = gpu;
+      gpu = Promise.resolve(null);
+      void failed?.then(renderer => renderer?.dispose(),() => {});
     } finally {
       gpuEstimate?.dispose();
     }
@@ -104,15 +110,6 @@ self.onmessage = async ({data}) => {
     }
     return;
   }
-  if (data.type === "export") {
-    try {
-      const frame = await renderFilm(data);
-      postMessage({type:"exported",frame},[frame.pixels.buffer]);
-    } catch (error) {
-      postMessage({type:"export-error",message:error.message});
-    }
-    return;
-  }
   if (data.type === "stop") {
     clearTimeout(timer);
     stopping = true;
@@ -127,6 +124,15 @@ self.onmessage = async ({data}) => {
     if (!data.forceCpu) {
       gpu ??= openGpu();
       estimate = await (await gpu)?.newEstimate(data.settings);
+      if (!estimate) {
+        let message = "WebGPU unavailable in worker";
+        if (self.navigator?.gpu) {
+          const adapter = await self.navigator.gpu.requestAdapter().catch(() => null);
+          message = !adapter ? "No WebGPU adapter" :
+            "Software fallback adapter"+(adapter.info?.description ? " ("+adapter.info.description+")" : "");
+        }
+        postMessage({type:"fallback",message});
+      }
     } else {
       estimate = undefined;
     }

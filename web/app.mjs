@@ -1,14 +1,14 @@
-import {clamp,defaultScene} from "./scene.mjs";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=3";
+import {clamp,defaultScene} from "./scene.mjs?v=28";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=28";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
-const saveImage = el("saveImage");
-const worker = new Worker(new URL("./worker.mjs?v=5",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=28",import.meta.url),{type:"module"});
 const controls = {};
+const narrow = matchMedia("(max-width: 540px)");
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
 let frame;
 let previewFrame;
@@ -21,8 +21,6 @@ let drag;
 let yaw = defaultScene.yaw;
 let pitch = defaultScene.pitch;
 let cameraRenderPending = false;
-let exportRequest;
-let exportCache;
 let barMap;
 let display = displayDefaults("rgbIntensity");
 
@@ -54,17 +52,23 @@ function updateSlider(id,value) {
   const {field,output,format} = controls[id];
   if (value !== undefined) field.value = value;
   output.value = format(Number(field.value));
+  // Fill from zero for ranges that straddle it, otherwise from the minimum.
+  const min = Number(field.min), max = Number(field.max), span = max-min;
+  const percent = x => (span ? (x-min)/span*100 : 0)+"%";
+  const origin = min<0 && max>0 ? 0 : min;
+  const ends = [origin,Number(field.value)].sort((a,b) => a-b);
+  field.style.setProperty("--from",percent(ends[0]));
+  field.style.setProperty("--to",percent(ends[1]));
 }
 
 const fixed = digits => value => value.toFixed(digits);
 const degrees = value => value.toFixed(1)+"°";
 const factor = digits => value => value.toFixed(digits)+"×";
-slider("advancedSourceControls","light_scale","Light intensity",0,10,.01,1,factor(2));
-slider("sourceControls","source_dop","Source polarization",0,1,.01,0,value => Math.round(value*100)+"%");
-slider("sourceControls","source_aolp","Source angle",-90,90,.1,0,degrees);
-slider("sourceControls","source_ellipticity","Source ellipticity",-1,1,.01,0,fixed(2));
+const lightSliders = ["source_dop","source_aolp","source_ellipticity"];
+slider("sourceControls","source_dop","Degree of polarization",0,1,.01,0,value => Math.round(value*100)+"%");
+slider("sourceControls","source_aolp","Angle of polarization",-90,90,.1,0,degrees);
+slider("sourceControls","source_ellipticity","Ellipticity",-1,1,.01,0,fixed(2));
 slider("displaySliders","exposure","Exposure",-8,8,.1,0,value => (value>0 ? "+" : "")+value.toFixed(1)+" EV");
-slider("analyzerControl","angle","Analyzer angle",-90,90,.1,0,degrees);
 slider("zoomControl","zoom","Display zoom",1,4,.1,1,factor(1));
 slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
 
@@ -72,33 +76,55 @@ function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
     if (id === "yaw") return [id,yaw];
     if (id === "pitch") return [id,pitch];
+    if (id === "source_dop" && el("sourceMode").value !== "polarized") return [id,0];
     const field = el(id);
+    // Settings without a control, such as light intensity, keep their defaults.
+    if (!field) return [id,value];
     return [id,typeof value === "number" ? Number(field.value) : field.value];
   }));
 }
 
 function updateButtons() {
-  const dirty = JSON.stringify(readSettings()) !== loadedSettings;
-  const invalid = !el("spp").validity.valid || !el("max_depth").validity.valid || !el("rr_depth").validity.valid;
+  const dirty = loadedSettings !== undefined && JSON.stringify(readSettings()) !== loadedSettings;
+  const fields = ["spp","max_depth","rr_depth"].map(el);
+  for (const field of fields) field.classList.toggle("invalid",!field.validity.valid);
+  const invalid = fields.some(field => !field.validity.valid);
+  el("sppError").hidden = el("spp").validity.valid;
   const cameraBusy = Boolean(drag?.moved || previewRequest || cameraRenderPending);
-  const busy = running || Boolean(exportRequest) || cameraBusy;
+  const busy = running || cameraBusy;
   const actionType = running ? "button" : "submit";
   if (estimateAction.type !== actionType) {
     estimateAction.type = actionType;
-    estimateAction.textContent = running ? "Stop" : "Fresh estimate";
+    estimateAction.textContent = running ? "Stop" : "Fresh render";
   }
+  estimateAction.classList.toggle("stop",running);
+  estimateAction.classList.toggle("has-changes",!running && dirty);
   estimateAction.disabled = running ? stopping : busy || invalid;
-  el("scene").disabled = busy;
-  el("camera").disabled = busy;
-  el("export").disabled = !frame || Boolean(exportRequest) || cameraBusy || (running && needsDefaultCamera(frame));
-  el("sceneChanges").hidden = running || cameraBusy || !frame || !dirty;
+  // Scene edits stay available while rendering; they apply on the next fresh render.
+  const cameraDefault = yaw===defaultScene.yaw && pitch===defaultScene.pitch &&
+    Number(controls.distance.field.value)===defaultScene.distance && Number(controls.zoom.field.value)===1;
+  el("reset").disabled = cameraDefault || Boolean(drag?.moved);
+  // Re-render stays quiet until a setting changes, then stands out so the edit is easy to apply.
+  const rerender = el("rerender");
+  rerender.classList.toggle("has-changes",dirty);
+  rerender.disabled = Boolean(drag?.moved) || invalid || stopping || (running && !dirty);
+  el("sceneChanges").hidden = cameraBusy || !dirty;
   el("progress").classList.toggle("active",running);
+  const spp = el("spp").value;
+  for (const button of document.querySelectorAll("[data-spp]")) button.setAttribute("aria-pressed",String(button.dataset.spp===spp));
 }
 
+function setStatus(text) {
+  el("status").textContent = text;
+}
+
+const samplesText = (done,total) => (total===undefined ? done : done+" / "+total)+" samples per pixel";
+
 function updateSourceControls() {
-  const unpolarized = Number(controls.source_dop.field.value) === 0;
-  controls.source_aolp.wrapper.hidden = unpolarized;
-  controls.source_ellipticity.wrapper.hidden = unpolarized;
+  const polarized = el("sourceMode").value === "polarized";
+  el("sourceControls").hidden = !polarized;
+  // Choosing Polarized with DoP at zero would still render unpolarized light, so start fully polarized.
+  if (polarized && Number(controls.source_dop.field.value) === 0) updateSlider("source_dop",1);
 }
 
 function setOptions(element,entries) {
@@ -149,17 +175,32 @@ function changeFilter() {
 function draw() {
   const image = previewFrame ?? frame;
   const spec = filters[display.filter];
+  stage.classList.toggle("preview",Boolean(previewFrame));
+  el("stageMessage").hidden = Boolean(image) || (!running && !cameraRenderPending && el("error").hidden);
   const showBar = Boolean(image) && !spec.rgb && el("showColorbar").checked;
-  el("colorbar").hidden = !showBar;
+  // Keep the colorbar's space reserved so the image never shifts between filters.
+  el("colorbar").classList.toggle("off",!showBar);
+  el("colorbar").setAttribute("aria-hidden",String(!showBar));
   if (showBar) {
     const gain = spec.exposure ? 2**display.exposure : 1;
-    const fmt = value => Number((value/gain).toPrecision(4)).toString();
+    const fmt = value => Number((value/gain).toPrecision(3)).toString().replace("-","−");
+    const {minimum,maximum} = display;
+    const span = maximum-minimum;
+    let middle = minimum+span/2;
+    if (display.log && spec.log) {
+      const floor = span*1e-3;
+      middle = minimum>0 ? Math.sqrt(minimum*maximum) : minimum+floor*Math.sqrt(span/floor);
+    }
     el("barTitle").textContent = spec.title;
-    el("barMaximum").value = fmt(display.maximum);
-    el("barMinimum").value = fmt(display.minimum);
-    if (barMap!==display.map) {
-      barMap = display.map;
-      el("barGradient").style.background = colorbar(barMap);
+    el("barMaximum").value = fmt(maximum);
+    el("barMiddle").value = fmt(middle);
+    el("barMinimum").value = fmt(minimum);
+    // Phones lay the colorbar under the image, so its gradient runs left to right.
+    const horizontal = narrow.matches;
+    if (barMap!==display.map+horizontal) {
+      barMap = display.map+horizontal;
+      const gradient = colorbar(display.map);
+      el("barGradient").style.background = horizontal ? gradient.replace("to top","to right") : gradient;
     }
   }
   if (!image) return;
@@ -174,7 +215,6 @@ function begin() {
   if (!Number.isInteger(requested) || !el("spp").validity.valid) return;
   frame = undefined;
   previewFrame = undefined;
-  exportCache = undefined;
   loadedSettings = JSON.stringify(settings);
   el("completed").textContent = "0 SPP";
   for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
@@ -184,7 +224,10 @@ function begin() {
   running = true;
   stopping = false;
   el("progress").value = 0;
-  el("status").textContent = "Rendering…";
+  el("stageMessage").classList.remove("failed");
+  el("stageMessageText").textContent = "Rendering…";
+  el("stageMessage").hidden = false;
+  setStatus("Rendering · "+samplesText(0,requested));
   updateButtons();
   worker.postMessage({type:"fresh",settings,samples:requested,forceCpu});
 }
@@ -195,19 +238,17 @@ function fail(message) {
   cameraRenderPending = false;
   previewRequest = previewFrame = undefined;
   loadedSettings = undefined;
-  el("status").textContent = "Render failed";
+  setStatus("Render failed");
   el("error").textContent = message;
   el("error").hidden = false;
+  el("stageMessage").classList.add("failed");
+  el("stageMessageText").textContent = "Render failed";
+  el("stageMessage").hidden = Boolean(frame);
   updateButtons();
 }
 
-worker.onerror = event => {
-  const message = event.message || "Could not start the render worker.";
-  if (exportRequest) finishExport({type:"export-error",message});
-  else fail(message);
-};
+worker.onerror = event => fail(event.message || "Could not start the render worker.");
 worker.onmessage = ({data}) => {
-  if (data.type === "exported" || data.type === "export-error") {finishExport(data); return;}
   if (data.type === "preview") {
     if (previewRequest === drag && drag?.moved && data.frame) {
       previewFrame = data.frame;
@@ -219,13 +260,20 @@ worker.onmessage = ({data}) => {
   }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
+    el("gpuNote").textContent = data.message;
+    // Compare with the page itself to tell a worker limitation from a missing GPU.
+    Promise.resolve(navigator.gpu?.requestAdapter()).catch(() => null).then(adapter => {
+      el("gpuNote").textContent = data.message+" in worker · page "+(!navigator.gpu ? "lacks WebGPU" :
+        adapter ? "has an adapter" : "has no adapter either");
+    });
     return;
   }
   if (data.type === "error") {fail(data.message); return;}
   if (data.type === "stopped") {
     if (!stopping) return;
     running = stopping = false;
-    el("status").textContent = drag?.moved ? "Camera preview" : "Stopped · "+(frame?.samples ?? 0)+" SPP";
+    if (drag?.moved) setStatus(drag.slider ? "Light preview" : "Camera preview");
+    else setStatus("Stopped · "+samplesText(frame?.samples ?? 0,requested));
     advanceCameraRender();
     return;
   }
@@ -241,7 +289,9 @@ worker.onmessage = ({data}) => {
   draw();
   if (!data.remaining && !stopping) {
     running = false;
-    el("status").textContent = "Ready · "+frame.samples+" SPP";
+    setStatus("Ready · "+samplesText(frame.samples));
+  } else if (!stopping && !drag?.moved) {
+    setStatus("Rendering · "+samplesText(frame.samples,requested));
   }
   updateButtons();
 };
@@ -273,21 +323,38 @@ for (const tab of tabs) {
 function stop() {
   if (!running || stopping) return;
   stopping = true;
-  el("status").textContent = "Stopping after this sample batch…";
+  setStatus("Stopping after this batch…");
   updateButtons();
   worker.postMessage({type:"stop"});
 }
 estimateAction.addEventListener("click",stop);
-for (const id of ["preset","channels","size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
+for (const id of ["preset","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
+el("sourceMode").addEventListener("change",() => {updateSourceControls(); renderCamera();});
+for (const group of document.querySelectorAll(".segmented")) {
+  group.addEventListener("change",event => {
+    el(group.dataset.target).value = event.target.value;
+    updateButtons();
+  });
+}
+for (const button of document.querySelectorAll("[data-spp]")) {
+  button.addEventListener("click",() => {
+    el("spp").value = button.dataset.spp;
+    updateButtons();
+  });
+}
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);
-    if (id === "zoom") applyZoom();
-    else if (id === "exposure" || id === "angle") {display[id] = Number(field.value);draw();}
-    else {
-      if (id === "source_dop") updateSourceControls();
-      updateButtons();
-    }
+    if (id === "zoom") {applyZoom(); updateButtons();}
+    else if (id === "exposure") {display.exposure = Number(field.value);draw();}
+    else if (lightSliders.includes(id)) previewLight();
+    else updateButtons();
+  });
+  // Releasing a light slider (or each arrow-key step) starts the full render.
+  if (lightSliders.includes(id)) field.addEventListener("change",() => {
+    if (!drag?.slider) return;
+    drag = undefined;
+    renderCamera();
   });
 }
 el("filter").addEventListener("change",changeFilter);
@@ -320,7 +387,7 @@ function advanceCameraRender() {
     } else if (!drag?.moved && cameraRenderPending) {
       cameraRenderPending = false;
       previewFrame = undefined;
-      el("status").textContent = "Camera changed";
+      setStatus("Camera changed");
       updateButtons();
       begin();
       if (!running) draw();
@@ -330,13 +397,31 @@ function advanceCameraRender() {
   updateButtons();
 }
 
+el("rerender").addEventListener("click",() => {
+  if (running) renderCamera();
+  else begin();
+});
+
+// Light sliders preview live like orbiting: low-resolution single-sample frames while moving.
+function previewLight() {
+  if (drag && !drag.slider) return;
+  if (!drag) {
+    drag = {slider:true,moved:true};
+    cameraRenderPending = false;
+    stop();
+    setStatus("Light preview");
+  }
+  drag.previewDirty = true;
+  advanceCameraRender();
+}
+
 function renderCamera() {
   cameraRenderPending = true;
   stop();
   advanceCameraRender();
 }
 stage.addEventListener("pointerdown",event => {
-  if (exportRequest || !event.isPrimary || event.button!==0) return;
+  if (!event.isPrimary || event.button!==0) return;
   drag = {id:event.pointerId,x:event.clientX,y:event.clientY,yaw,pitch,moved:false};
   stage.setPointerCapture(event.pointerId);
 });
@@ -345,12 +430,12 @@ stage.addEventListener("pointermove",event => {
   const dx = event.clientX-drag.x;
   const dy = event.clientY-drag.y;
   if (!drag.moved) {
-    if (exportRequest || Math.hypot(dx,dy)<2) return;
+    if (Math.hypot(dx,dy)<2) return;
     drag.moved = true;
     cameraRenderPending = false;
     stage.classList.add("orbiting");
     stop();
-    el("status").textContent = "Camera preview";
+    setStatus("Camera preview");
   }
   yaw = drag.yaw-dx*.2;
   pitch = clamp(drag.pitch+dy*.2,-80,80);
@@ -365,7 +450,7 @@ stage.addEventListener("lostpointercapture",event => {
   if (moved) renderCamera();
 });
 stage.addEventListener("keydown",event => {
-  if (exportRequest || drag) return;
+  if (drag) return;
   const delta = {ArrowLeft:[4.8,0],ArrowRight:[-4.8,0],ArrowUp:[0,-4.8],ArrowDown:[0,4.8],Home:[-yaw,-pitch]}[event.key];
   if (!delta) return;
   event.preventDefault();
@@ -385,70 +470,77 @@ el("reset").addEventListener("click",() => {
   if (JSON.stringify(readSettings())!==loadedSettings) renderCamera();
 });
 
-function download(blob,filename) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url),10000);
-}
-function needsDefaultCamera(outputFrame) {
-  const {yaw,pitch,distance} = outputFrame.settings;
-  return yaw!==defaultScene.yaw || pitch!==defaultScene.pitch || distance!==defaultScene.distance;
-}
-
-function savePng(outputFrame,displaySettings) {
-  const output = document.createElement("canvas");
-  output.width = output.height = outputFrame.size;
-  const pixels = displayPixels(outputFrame,displaySettings);
-  output.getContext("2d",{alpha:false}).putImageData(new ImageData(pixels,output.width,output.height),0,0);
-  output.toBlob(blob => {
-    if (blob) download(blob,"pocket-pol.png");
-  },"image/png");
-}
-
-function requestExport() {
-  if (!frame || el("export").disabled) return;
-  const displaySettings = {...display};
-  if (!needsDefaultCamera(frame)) {
-    savePng(frame,displaySettings);
-    return;
+// Analyzer wheel: a rotatable linear polarizer.
+const wheel = el("wheel");
+const SVG = "http://www.w3.org/2000/svg";
+for (let a=0; a<360; a+=15) {
+  const major = a%45 === 0;
+  const r = a*Math.PI/180, c = Math.cos(r), s = -Math.sin(r);
+  const tick = document.createElementNS(SVG,"line");
+  tick.setAttribute("class","tick"+(major ? " major" : ""));
+  const outer = major ? 86 : 83;
+  for (const [k,v] of Object.entries({x1:c*78,y1:s*78,x2:c*outer,y2:s*outer})) tick.setAttribute(k,v);
+  el("wheelTicks").append(tick);
+  if (major && a<180) {
+    const label = document.createElementNS(SVG,"text");
+    label.setAttribute("class","label");
+    label.setAttribute("x",c*96);
+    label.setAttribute("y",s*96);
+    label.textContent = a+"°";
+    el("wheelTicks").append(label);
   }
-  if (exportCache?.source === frame) {
-    savePng(exportCache.frame,displaySettings);
-    return;
-  }
-  exportRequest = {source:frame,label:saveImage.textContent,displaySettings};
-  saveImage.textContent = "Preparing…";
-  el("exportStatus").textContent = "Rendering from the default camera.";
-  updateButtons();
-  const {yaw,pitch,distance} = defaultScene;
-  worker.postMessage({
-    type:"export",settings:{...frame.settings,yaw,pitch,distance},
-    samples:frame.samples,seed:frame.seed,forceCpu,
-  });
 }
-
-function finishExport(data) {
-  if (!exportRequest) return;
-  const {source,label,displaySettings} = exportRequest;
-  exportRequest = undefined;
-  saveImage.textContent = label;
-  updateButtons();
-  if (data.type === "export-error") {
-    el("exportStatus").textContent = "";
-    el("error").textContent = "Export failed. "+data.message;
-    el("error").hidden = false;
-    return;
-  }
-  el("exportStatus").textContent = "Default-camera export ready.";
-  exportCache = {source,frame:data.frame};
-  savePng(data.frame,displaySettings);
+const wrapAngle = a => ((a+90)%180+180)%180-90;
+function setAnalyzer(angle = display.angle) {
+  display.angle = Math.round(wrapAngle(angle)*10)/10;
+  el("wheelLinear").style.transform = "rotate("+(-display.angle)+"deg)";
+  // Show linear angles on the 0–180° scale used by the presets.
+  const shown = display.angle<0 ? display.angle+180 : display.angle;
+  const text = shown.toFixed(Number.isInteger(shown) ? 0 : 1)+"°";
+  el("analyzerValue").value = text;
+  // Report the same 0–180° scale to assistive technology.
+  wheel.setAttribute("aria-valuenow",String(shown));
+  wheel.setAttribute("aria-valuetext","Linear "+text);
+  draw();
 }
-
-saveImage.addEventListener("click",requestExport);
+function wheelAngle(event) {
+  const box = wheel.getBoundingClientRect();
+  const x = event.clientX-(box.left+box.width/2);
+  const y = event.clientY-(box.top+box.height/2);
+  let angle = wrapAngle(Math.atan2(-y,x)*180/Math.PI);
+  const snap = Math.round(angle/45)*45;
+  if (Math.abs(angle-snap)<3) angle = snap;
+  return angle;
+}
+let turning;
+wheel.addEventListener("pointerdown",event => {
+  if (!event.isPrimary || event.button!==0) return;
+  turning = event.pointerId;
+  wheel.setPointerCapture(event.pointerId);
+  wheel.classList.add("turning");
+  setAnalyzer(wheelAngle(event));
+});
+wheel.addEventListener("pointermove",event => {
+  if (turning === event.pointerId) setAnalyzer(wheelAngle(event));
+});
+wheel.addEventListener("lostpointercapture",() => {turning = undefined; wheel.classList.remove("turning");});
+wheel.addEventListener("keydown",event => {
+  const step = event.shiftKey ? 15 : 1;
+  // Right and Up increase the angle, like other sliders.
+  const next = {ArrowRight:display.angle+step,ArrowUp:display.angle+step,ArrowLeft:display.angle-step,ArrowDown:display.angle-step,Home:0}[event.key];
+  if (next === undefined) return;
+  event.preventDefault();
+  setAnalyzer(next);
+});
+// Append ?stats to the URL to show the renderer and timing, e.g. when testing on a phone.
+if (new URLSearchParams(location.search).has("stats")) {
+  const stats = el("statistics").querySelector("details");
+  stats.hidden = false;
+  stats.open = true;
+}
+narrow.addEventListener("change",draw);
 
 updateFilterOptions();
 updateSourceControls();
+setAnalyzer();
 begin();

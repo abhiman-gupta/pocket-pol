@@ -62,7 +62,9 @@ export function makeScene(settings) {
     quad([1,-1,-1],[0,0,2],[0,2,0],material(green)),
     light,
     ...box([.335,-.7,.38],-17,.3,whiteNylon),
-    ...box([-.33,-.4,-.28],18.25,.61,whiteNylon),
+    // Mitsuba's cornell_box() centers this block at y = -0.4, which sinks it 0.01 into the floor.
+    // Raise it by 0.01 so it rests on the floor like the short block, keeping its 1.22 height.
+    ...box([-.33,-.39,-.28],18.25,.61,whiteNylon),
   ];
   const yaw = radians(settings.yaw);
   const pitch = radians(settings.pitch);

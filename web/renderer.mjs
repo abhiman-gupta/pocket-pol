@@ -1,5 +1,5 @@
-import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs";
-import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs";
+import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=28";
+import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=28";
 
 const EPS = .0001;
 const PI = Math.PI;
