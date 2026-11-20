@@ -35,6 +35,10 @@ node web/render.mjs --backend webgpu --scene cornell --size 256 --spp 256 --out 
 
 The GPU and CPU paths use the same sampling sequence and film format. Floating-point rounding can differ across GPU and CPU renders.
 
+## Hosting
+
+GitHub Pages serves the public app at [pocket-pol.abhimangupta.com](https://pocket-pol.abhimangupta.com) from the root of the `gh-pages` branch. Publish the static browser assets from `web/` and keep the deployment branch's `CNAME` and `.nojekyll` files. The headless command runs from the source branch.
+
 ## Credits and citation
 
 - **Mitsuba 3** provides the upstream source history and Cornell box scene. Wenzel Jakob created Mitsuba at EPFL's Realistic Graphics Lab. Its software citation credits Wenzel Jakob, Sébastien Speierer, Nicolas Roussel, Merlin Nimier-David, Delio Vicini, Tizian Zeltner, Baptiste Nicolet, Miguel Crespo, Vincent Leroy, and Ziyi Zhang. Thank you to the wider Mitsuba community for its contributions. [Upstream project and citation](https://github.com/mitsuba-renderer/mitsuba3#about) · [Contributors](https://github.com/mitsuba-renderer/mitsuba3/graphs/contributors)
