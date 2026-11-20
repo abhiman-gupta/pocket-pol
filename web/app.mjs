@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=36";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=36";
-import {setupExport} from "./export.mjs?v=36";
+import {clamp,defaultScene} from "./scene.mjs?v=37";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=37";
+import {setupExport} from "./export.mjs?v=37";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=36",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=37",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
