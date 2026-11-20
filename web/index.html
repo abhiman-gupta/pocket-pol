@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Polarization</title>
-  <link rel="stylesheet" href="./style.css?v=9">
-  <script type="module" src="./app.mjs?v=6"></script>
+  <link rel="stylesheet" href="./style.css?v=10">
+  <script type="module" src="./app.mjs?v=7"></script>
 </head>
 <body>
   <main class="window">
@@ -102,12 +102,11 @@
         <form id="estimateForm">
           <label class="row">Samples per estimate <input id="spp" type="number" min="1" max="4096" required value="8"></label>
           <div class="estimate-actions">
-            <button id="fresh" class="primary" type="submit">Fresh estimate</button>
-            <button id="stop" type="button" disabled>Stop</button>
+            <button id="estimateAction" class="primary" type="submit">Fresh estimate</button>
           </div>
         </form>
         <p id="sceneChanges" class="hint pending-changes" role="status" hidden>The viewport still shows the previous scene. Start a fresh estimate to apply your changes.</p>
-        <details>
+        <details hidden>
           <summary>Render statistics</summary>
           <dl>
             <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>

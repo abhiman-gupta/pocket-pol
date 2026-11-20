@@ -128,7 +128,7 @@ button:disabled, input:disabled, select:disabled { cursor: default; opacity: .55
 }
 .primary:hover:enabled { background-color: #3b4657; }
 :focus-visible { outline: 2px solid #526784; outline-offset: 3px; }
-.estimate-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 7px; margin-top: 13px; }
+.estimate-actions { display: grid; margin-top: 13px; }
 .estimate-actions button { min-height: 42px; }
 details { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); }
 summary { cursor: pointer; color: var(--muted); }

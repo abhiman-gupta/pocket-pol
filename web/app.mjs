@@ -7,6 +7,7 @@ const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
+const estimateAction = el("estimateAction");
 const worker = new Worker(new URL("./worker.mjs?v=5",import.meta.url),{type:"module"});
 const controls = {};
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
@@ -83,8 +84,12 @@ function updateButtons() {
   const invalid = !el("spp").validity.valid || !el("max_depth").validity.valid || !el("rr_depth").validity.valid;
   const cameraBusy = Boolean(drag?.moved || previewRequest || cameraRenderPending);
   const busy = running || Boolean(exportRequest) || cameraBusy;
-  el("fresh").disabled = busy || invalid;
-  el("stop").disabled = !running || stopping;
+  const actionType = running ? "button" : "submit";
+  if (estimateAction.type !== actionType) {
+    estimateAction.type = actionType;
+    estimateAction.textContent = running ? "Stop" : "Fresh estimate";
+  }
+  estimateAction.disabled = running ? stopping : busy || invalid;
   el("scene").disabled = busy;
   el("camera").disabled = busy;
   el("export").disabled = !frame || Boolean(exportRequest) || cameraBusy || (running && needsDefaultCamera(frame));
@@ -163,7 +168,7 @@ function draw() {
 }
 
 function begin() {
-  if (running || el("fresh").disabled) return;
+  if (running || estimateAction.disabled) return;
   const settings = readSettings();
   requested = el("spp").valueAsNumber;
   if (!Number.isInteger(requested) || !el("spp").validity.valid) return;
@@ -272,7 +277,7 @@ function stop() {
   updateButtons();
   worker.postMessage({type:"stop"});
 }
-el("stop").addEventListener("click",stop);
+estimateAction.addEventListener("click",stop);
 for (const id of ["channels","size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
