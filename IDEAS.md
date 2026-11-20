@@ -58,7 +58,7 @@ The initial scope follows Pollia's Swift window, Cornell box, and Jarecki materi
 
 ## Future scene and material tools
 
-- [ ] **Bring your own 3D model.** Let users load a 3D file from their device, place it in the scene, and render it under a light source. Supported formats and import settings are open decisions.
+- [ ] **Bring your own 3D model.** Let users load a 3D file from their device, place it in the scene, and render it under a light source. Supported formats and import settings are open decisions. Planned UI: an “Upload 3D” button to the right of Export under the image creates a new scene from the uploaded object, and the “Scene: Cornell Box” title becomes “Scene: [dropdown]” so people can switch between Cornell Box, the d’Alembert statue, and their uploads.
 - [ ] **PBR and polarized ray tracing (PRT).** Let users render the same model and lighting in either mode so they can compare an ordinary physically based image with a polarization-aware render.
 - [ ] **Quick glass and isotropic crystal presets.** Make it easy to render a glass statue or a simple isotropic crystal for fun. Use Schlick’s approximation for angle-dependent Fresnel reflectance in the quick PBR preset. Use polarization-aware Fresnel transport for a polarized dielectric preset.
 
@@ -81,6 +81,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 - [x] **Pocket Pol license.** Pocket Pol is released under the BSD 3-Clause License, © 2026 Abhiman Gupta (root `LICENSE`). `web/LICENSE` ships with the site and adds Mitsuba's original notice for the portions adapted from Pollia and Mitsuba 3. Ship the upstream license and preferred Mitsuba 3 citation with the browser build.
 - Credit Charlie Tribble, Abhiman Gupta, and Matthew Kupinski by name (no GitHub handles) as Pollia’s developers.
 
+- [x] **Deploy retries.** GitHub Pages' deploy step intermittently failed right after a successful upload (“No artifacts named github-pages” or “Deployment failed, try again later”). The workflow now waits for the artifact to register and retries the deploy step twice, after 60 s and 120 s.
 - [x] **Automatic deploys with GitHub Actions.** Every push to `main` that touches `web/` publishes the site through `.github/workflows/deploy.yml`, so the live site always matches committed source. Pages uses the GitHub Actions source with the custom domain and Enforce HTTPS kept in settings.
 
 ## Design preferences
