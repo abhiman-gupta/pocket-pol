@@ -16,8 +16,9 @@ let running = false;
 let stopping = false;
 let requested = 0;
 let drag;
-let panX = 0;
-let panY = 0;
+let yaw = defaultScene.yaw;
+let pitch = defaultScene.pitch;
+let cameraRenderPending = false;
 let exportRequest;
 let exportCache;
 let barMap;
@@ -67,7 +68,9 @@ slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
 
 function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
-    if (["preset","yaw","pitch"].includes(id)) return [id,value];
+    if (id === "preset") return [id,value];
+    if (id === "yaw") return [id,yaw];
+    if (id === "pitch") return [id,pitch];
     const field = el(id);
     return [id,typeof value === "number" ? Number(field.value) : field.value];
   }));
@@ -76,13 +79,14 @@ function readSettings() {
 function updateButtons() {
   const dirty = JSON.stringify(readSettings()) !== loadedSettings;
   const invalid = !el("spp").validity.valid || !el("max_depth").validity.valid || !el("rr_depth").validity.valid;
-  el("fresh").disabled = running || Boolean(exportRequest) || invalid;
-  el("continue").disabled = running || Boolean(exportRequest) || !frame || dirty || invalid;
+  const busy = running || Boolean(exportRequest) || Boolean(drag?.moved);
+  el("fresh").disabled = busy || invalid;
+  el("continue").disabled = busy || !frame || dirty || invalid;
   el("stop").disabled = !running || stopping;
-  el("scene").disabled = running || Boolean(exportRequest);
-  el("camera").disabled = running || Boolean(exportRequest);
-  el("export").disabled = !frame || Boolean(exportRequest) || (running && needsDefaultCamera(frame));
-  el("sceneChanges").hidden = running || !frame || !dirty;
+  el("scene").disabled = busy;
+  el("camera").disabled = busy;
+  el("export").disabled = !frame || Boolean(exportRequest) || Boolean(drag?.moved) || (running && needsDefaultCamera(frame));
+  el("sceneChanges").hidden = running || Boolean(drag?.moved) || !frame || !dirty;
   el("progress").classList.toggle("active",running);
 }
 
@@ -181,6 +185,7 @@ function begin(fresh,startup = false) {
 function fail(message) {
   running = false;
   stopping = false;
+  cameraRenderPending = false;
   loadedSettings = undefined;
   el("status").textContent = "Render failed";
   el("error").textContent = message;
@@ -206,6 +211,10 @@ worker.onmessage = ({data}) => {
     running = stopping = false;
     el("status").textContent = "Stopped · "+(frame?.samples ?? 0)+" SPP";
     updateButtons();
+    if (cameraRenderPending) {
+      cameraRenderPending = false;
+      begin(true);
+    }
     return;
   }
   const first = !frame;
@@ -262,7 +271,7 @@ for (const id of ["channels","size","max_depth","rr_depth","spp"]) el(id).addEve
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);
-    if (id === "zoom") setPan(panX,panY);
+    if (id === "zoom") applyZoom();
     else if (id === "exposure" || id === "angle") {display[id] = Number(field.value);draw();}
     else {
       if (id === "source_dop") updateSourceControls();
@@ -285,41 +294,64 @@ for (const id of ["minimum","maximum"]) el(id).addEventListener("input",() => {
   draw();
 });
 
-function setPan(x,y) {
-  const zoom = Number(controls.zoom.field.value);
-  const limitX = Math.max(0,(stage.clientWidth+canvas.clientWidth*zoom)/2-40);
-  const limitY = Math.max(0,(stage.clientHeight+canvas.clientHeight*zoom)/2-40);
-  panX = clamp(x,-limitX,limitX);
-  panY = clamp(y,-limitY,limitY);
-  canvas.style.transform = "translate("+panX+"px,"+panY+"px) scale("+zoom+")";
+function applyZoom() {
+  canvas.style.transform = "scale("+controls.zoom.field.value+")";
+}
+
+function renderCamera() {
+  updateButtons();
+  if (running) {
+    cameraRenderPending = true;
+    stop();
+  } else {
+    begin(true);
+  }
 }
 stage.addEventListener("pointerdown",event => {
-  if (!event.isPrimary || event.button!==0) return;
-  drag = {id:event.pointerId,x:event.clientX,y:event.clientY,panX,panY};
-  stage.classList.add("panning");
+  if (exportRequest || !event.isPrimary || event.button!==0) return;
+  drag = {id:event.pointerId,x:event.clientX,y:event.clientY,yaw,pitch,moved:false};
   stage.setPointerCapture(event.pointerId);
 });
 stage.addEventListener("pointermove",event => {
   if (drag?.id!==event.pointerId) return;
-  setPan(drag.panX+event.clientX-drag.x,drag.panY+event.clientY-drag.y);
+  const dx = event.clientX-drag.x;
+  const dy = event.clientY-drag.y;
+  if (!drag.moved) {
+    if (exportRequest || Math.hypot(dx,dy)<2) return;
+    drag.moved = true;
+    stage.classList.add("orbiting");
+    stop();
+    updateButtons();
+  }
+  yaw = drag.yaw-dx*.2;
+  pitch = clamp(drag.pitch+dy*.2,-80,80);
 });
-stage.addEventListener("lostpointercapture",() => {
+stage.addEventListener("lostpointercapture",event => {
+  if (drag?.id!==event.pointerId) return;
+  const {moved} = drag;
   drag = undefined;
-  stage.classList.remove("panning");
+  stage.classList.remove("orbiting");
+  if (moved) renderCamera();
 });
 stage.addEventListener("keydown",event => {
-  const delta = {ArrowLeft:[-24,0],ArrowRight:[24,0],ArrowUp:[0,-24],ArrowDown:[0,24],Home:[-panX,-panY]}[event.key];
+  if (exportRequest || drag) return;
+  const delta = {ArrowLeft:[4.8,0],ArrowRight:[-4.8,0],ArrowUp:[0,-4.8],ArrowDown:[0,4.8],Home:[-yaw,-pitch]}[event.key];
   if (!delta) return;
   event.preventDefault();
-  setPan(panX+delta[0],panY+delta[1]);
+  const nextPitch = clamp(pitch+delta[1],-80,80);
+  if (!delta[0] && nextPitch===pitch) return;
+  yaw += delta[0];
+  pitch = nextPitch;
+  renderCamera();
 });
-window.addEventListener("resize",() => setPan(panX,panY));
 el("reset").addEventListener("click",() => {
+  yaw = defaultScene.yaw;
+  pitch = defaultScene.pitch;
   updateSlider("distance",defaultScene.distance);
   updateSlider("zoom",1);
-  setPan(0,0);
+  applyZoom();
   updateButtons();
-  if (JSON.stringify(readSettings())!==loadedSettings) begin(true);
+  if (JSON.stringify(readSettings())!==loadedSettings) renderCamera();
 });
 
 function download(blob,filename) {

@@ -216,7 +216,7 @@ details dl .row { margin: 3px 0; }
   cursor: grab;
   user-select: none;
 }
-#stage.panning { cursor: grabbing; }
+#stage.orbiting { cursor: grabbing; }
 canvas {
   display: block;
   width: min(100cqw,100cqh);
