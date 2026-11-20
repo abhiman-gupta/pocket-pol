@@ -70,7 +70,6 @@ h1, h2, h3, dl, dd, p { margin: 0; }
   text-wrap: balance;
 }
 .page-credit { white-space: nowrap; }
-.credit-dot { padding-inline: .15em; color: var(--faint); }
 .page-credit a { color: inherit; text-decoration: underline; text-underline-offset: .2em; }
 .page-credit a:hover { color: var(--ink); }
 .scene-name {
@@ -365,7 +364,7 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 .panel-switch button:hover:enabled { background: transparent; color: var(--ink); }
 .panel-switch button[aria-selected="true"] { border-bottom-color: var(--ink); color: var(--ink); }
 .settings-panel { padding: 16px 18px 18px; }
-.light-panel, .filter-panel, .estimate-panel { padding: 16px 18px 18px; }
+.light-panel, .filter-panel, .estimate-panel, .render-panel { padding: 16px 18px 18px; }
 .light-panel .row:last-of-type { margin-bottom: 0; }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .panel-fields > legend, .section-head {
@@ -832,7 +831,6 @@ dt, .hint { color: var(--muted); }
 .label-help .help-button { width: 20px; height: 20px; font-size: .6875rem; }
 .advanced { color: var(--muted); font-size: .8125rem; letter-spacing: 0; }
 @media (max-width: 540px) {
-  /* Phones: the credit takes its own line under the tagline, without the separator. */
+  /* Phones: the credit takes its own line under the tagline. */
   .page-credit { display: block; margin-top: 4px; font-size: .875rem; }
-  .credit-dot { display: none; }
 }

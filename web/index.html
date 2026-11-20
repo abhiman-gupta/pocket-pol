@@ -26,14 +26,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=51">
-  <script type="module" src="./app.mjs?v=51"></script>
+  <link rel="stylesheet" href="./style.css?v=52">
+  <script type="module" src="./app.mjs?v=52"></script>
 </head>
 <body>
   <main class="window">
     <header class="page-header">
       <h1 class="page-title">Pocket Pol</h1>
-      <p class="page-subtitle">A physically based polarization renderer that runs entirely in your browser.<span class="page-credit"><span class="credit-dot" aria-hidden="true"> · </span>Created by <a href="https://abhimangupta.com/">Abhiman Gupta</a></span></p>
+      <p class="page-subtitle">A physically based polarization renderer that runs entirely in your browser. <span class="page-credit">Created by <a href="https://abhimangupta.com/">Abhiman Gupta</a></span></p>
     </header>
 
     <section class="viewer" aria-label="Render viewport">
@@ -112,53 +112,40 @@
 
       <p id="error" class="error-box" role="alert" hidden></p>
 
-      <div class="inspector card">
-        <div class="panel-switch" role="tablist" aria-label="Renderer settings">
-          <button id="scene-tab" type="button" role="tab" aria-selected="true" aria-controls="scene-panel">Scene</button>
-          <button id="render-tab" type="button" role="tab" aria-selected="false" aria-controls="render-panel" tabindex="-1">Render Settings</button>
+      <fieldset id="statistics" class="render-panel card">
+        <legend class="visually-hidden">Render settings</legend>
+        <div class="section-head"><h2>Render Settings</h2><button id="stopRender" type="button" class="link-button" hidden>Stop</button></div>
+        <input type="hidden" id="preset" value="cornell">
+        <div class="row">
+          <span class="label-help"><span id="depthLabel">Max path depth</span><button type="button" class="help-button" aria-haspopup="dialog" data-help="depthHelp" aria-label="Explain max path depth">?</button></span>
+          <div class="stepper" role="group" aria-labelledby="depthLabel">
+            <button id="depthDown" type="button" aria-label="Decrease max path depth">−</button>
+            <output id="depthValue" aria-live="polite">4</output>
+            <button id="depthUp" type="button" aria-label="Increase max path depth">+</button>
+          </div>
+          <input type="hidden" id="max_depth" value="4">
         </div>
-        <div class="settings-panel" id="scene-panel" role="tabpanel" aria-labelledby="scene-tab">
-          <fieldset id="scene" class="panel-fields">
-            <legend><span>Scene setup</span></legend>
-            <label class="row">Scene
-              <select id="preset"><option value="cornell">Cornell Box</option></select>
-            </label>
-            <div class="row">
-              <span class="label-help"><span id="depthLabel">Max path depth</span><button type="button" class="help-button" aria-haspopup="dialog" data-help="depthHelp" aria-label="Explain max path depth">?</button></span>
-              <div class="stepper" role="group" aria-labelledby="depthLabel">
-                <button id="depthDown" type="button" aria-label="Decrease max path depth">−</button>
-                <output id="depthValue" aria-live="polite">4</output>
-                <button id="depthUp" type="button" aria-label="Increase max path depth">+</button>
-              </div>
-              <input type="hidden" id="max_depth" value="4">
-            </div>
-          </fieldset>
-        </div>
-        <div class="settings-panel" id="render-panel" role="tabpanel" aria-labelledby="render-tab" hidden>
-          <fieldset id="statistics" class="panel-fields">
-            <legend><span>Render settings</span><button id="stopRender" type="button" class="link-button" hidden>Stop</button></legend>
-            <form id="estimateForm" novalidate>
-              <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="64" inputmode="numeric" enterkeyhint="go"></label>
-              <div class="spp-presets" role="group" aria-label="Sample presets">
-                <button type="button" data-spp="64">64</button>
-                <button type="button" data-spp="256">256</button>
-                <button type="button" data-spp="1024">1024</button>
-              </div>
-              <p id="sppError" class="hint error" hidden>Enter a whole number from 1 to 4096.</p>
-            </form>
-            <details hidden>
-              <summary>Render statistics</summary>
-              <dl>
-                <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
-                <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
-                <div class="row"><dt>GPU note</dt><dd id="gpuNote">—</dd></div>
-                <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
-                <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
-                <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
-              </dl>
-            </details>
-          </fieldset>
-        </div>
+        <form id="estimateForm" novalidate>
+          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="64" inputmode="numeric" enterkeyhint="go"></label>
+          <div class="spp-presets" role="group" aria-label="Sample presets">
+            <button type="button" data-spp="64">64</button>
+            <button type="button" data-spp="256">256</button>
+            <button type="button" data-spp="1024">1024</button>
+          </div>
+          <p id="sppError" class="hint error" hidden>Enter a whole number from 1 to 4096.</p>
+        </form>
+        <details hidden>
+          <summary>Render statistics</summary>
+          <dl>
+            <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
+            <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
+            <div class="row"><dt>GPU note</dt><dd id="gpuNote">—</dd></div>
+            <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
+            <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
+            <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
+          </dl>
+        </details>
+      </fieldset>
       </div>
 
       <section id="scalarControls" class="adjustments card" aria-labelledby="adjustTitle" hidden>

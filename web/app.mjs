@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=51";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=51";
-import {setupExport} from "./export.mjs?v=51";
+import {clamp,defaultScene} from "./scene.mjs?v=52";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=52";
+import {setupExport} from "./export.mjs?v=52";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=51",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=52",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -436,10 +436,6 @@ for (const button of document.querySelectorAll("[data-spp]")) {
     renderCamera();
   });
 }
-el("preset").addEventListener("change",() => {
-  el("sceneName").textContent = el("preset").selectedOptions[0].text;
-  renderCamera();
-});
 
 function stepDepth(delta) {
   const value = clamp(Number(el("max_depth").value)+delta,1,64);

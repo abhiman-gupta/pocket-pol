@@ -1,5 +1,5 @@
 // Browser adaptation of Pollia's Jarecki model and Stokes conventions.
-import {add,sub,scale,dot,cross,unit} from "./scene.mjs?v=51";
+import {add,sub,scale,dot,cross,unit} from "./scene.mjs?v=52";
 
 export const identity = Array.from({length:16},(_,i) => i%5 === 0 ? 1 : 0);
 const depolarizer = [1,...Array(15).fill(0)];

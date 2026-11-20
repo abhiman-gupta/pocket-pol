@@ -1,9 +1,9 @@
 // Export window: re-renders the current scene at a higher sample count in its own worker,
 // then offers a PNG of the current view and the float32 Stokes channels, like Pollia's
 // Save Image and Save Channels.
-import {channelNames,displayPixels,filters} from "./display.mjs?v=51";
-import {exportChannels} from "./renderer.mjs?v=51";
-import {zipFiles} from "./files.mjs?v=51";
+import {channelNames,displayPixels,filters} from "./display.mjs?v=52";
+import {exportChannels} from "./renderer.mjs?v=52";
+import {zipFiles} from "./files.mjs?v=52";
 
 const el = id => document.getElementById(id);
 const sceneNames = {cornell:"Cornell Box"};
