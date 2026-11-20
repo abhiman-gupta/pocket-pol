@@ -209,48 +209,53 @@ details dl .row { margin: 4px 0; }
 #analyzerControl .slider { margin: 0; }
 #analyzerControl output { color: inherit; }
 .image-panel {
-  display: flex;
+  display: grid;
+  place-items: center;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  gap: clamp(6px, 1.5vw, 18px);
   padding: clamp(12px, 2.5vw, 34px);
   border-block: 1px solid #333b48;
-  background-color: #13171e;
-  background-image: radial-gradient(circle, #353d4b 0.7px, transparent 0.9px);
-  background-size: 20px 20px;
-  background-position: center;
+  background: #13171e;
+  container-type: size;
 }
 #stage {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  min-width: 0;
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
   overflow: hidden;
-  container-type: size;
+  box-shadow: 0 0 0 1px #565e6d;
   touch-action: none;
   cursor: grab;
   user-select: none;
 }
 #stage.orbiting { cursor: grabbing; }
-canvas {
+#image {
   display: block;
-  width: min(calc(100cqw - 4px), calc(100cqh - 4px));
+  width: 100%;
   height: auto;
   background: #0b0e13;
-  outline: 1px solid #626977;
-  box-shadow: 0 8px 32px #0a0c11;
 }
 .colorbar {
-  flex: 0 0 68px;
+  position: absolute;
+  inset-inline-end: 8px;
+  inset-block-end: 8px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   justify-items: center;
-  text-align: center;
-  gap: 4px;
-  overflow-wrap: anywhere;
+  min-width: 34px;
+  height: 46%;
+  gap: 3px;
+  padding: 4px 6px;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 5px;
+  background: rgb(0 0 0 / 82%);
+  color: #fff;
+  font-size: .8125rem;
+  line-height: 1.2;
+  pointer-events: none;
 }
-#barGradient { width: 14px; border-radius: 3px; }
+#barGradient { width: 10px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 2px; }
 .viewer-footer { min-height: 60px; padding-block: 9px; }
 .viewport-meta { color: #bfc7d5; flex-wrap: wrap; gap: 6px 12px; }
 #status { color: #eef0f4; }
@@ -278,5 +283,4 @@ progress.active { display: block; }
   .app-description { display: none; }
   .viewer-footer { align-items: start; flex-direction: column; gap: 8px; }
   .export-actions { justify-content: start; }
-  .colorbar { flex-basis: 55px; font-size: .8125rem; }
 }

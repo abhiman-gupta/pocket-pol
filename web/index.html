@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Pol</title>
-  <link rel="stylesheet" href="./style.css?v=5">
+  <link rel="stylesheet" href="./style.css?v=6">
   <script type="module" src="./app.mjs?v=5"></script>
 </head>
 <body>
@@ -24,10 +24,10 @@
       <div class="image-panel">
         <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
           <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
-        </div>
-        <div id="colorbar" class="colorbar" aria-label="Display colorbar" hidden>
-          <span id="barTitle" class="visually-hidden"></span><output id="barMaximum"></output>
-          <div id="barGradient"></div><output id="barMinimum"></output>
+          <div id="colorbar" class="colorbar" role="group" aria-labelledby="barTitle" hidden>
+            <span id="barTitle" class="visually-hidden"></span><output id="barMaximum"></output>
+            <div id="barGradient"></div><output id="barMinimum"></output>
+          </div>
         </div>
       </div>
       <footer class="viewer-footer">
