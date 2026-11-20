@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=53";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=53";
-import {setupExport} from "./export.mjs?v=53";
+import {clamp,defaultScene} from "./scene.mjs?v=54";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=54";
+import {setupExport} from "./export.mjs?v=54";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=53",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=54",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -505,8 +505,9 @@ function advanceCameraRender() {
       drag.previewDirty = false;
       previewRequest = drag;
       const settings = readSettings();
-      settings.size /= 2;
-      worker.postMessage({type:"preview",settings,samples:1,seed:0,forceCpu});
+      // Quarter resolution with 4 samples costs the same as half resolution with 1, but is far less noisy.
+      settings.size /= 4;
+      worker.postMessage({type:"preview",settings,samples:4,seed:0,forceCpu});
     } else if (!drag?.moved && cameraRenderPending) {
       cameraRenderPending = false;
       previewFrame = undefined;

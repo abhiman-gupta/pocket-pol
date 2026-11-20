@@ -1,9 +1,16 @@
-import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=53";
-import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=53";
+import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=54";
+import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=54";
 
 const EPS = .0001;
 const PI = Math.PI;
 const mis = (a,b) => a*a/(a*a+b*b);
+// PCG hash, matching trace.wgsl. It decorrelates the seeds of neighboring pixels, which otherwise
+// show up as diagonal streaks at low sample counts.
+function pcgHash(x) {
+  const state = (Math.imul(x>>>0,747796405)+2891336453)>>>0;
+  const word = Math.imul(((state>>>((state>>>28)+4))^state)>>>0,277803737)>>>0;
+  return ((word>>>22)^word)>>>0;
+}
 
 function intersect(shapes,origin,ray,limit = Infinity,shadow = false) {
   let hit = null;
@@ -128,7 +135,7 @@ export class Estimate {
     };
     for (let sample=first; sample<first+count; sample++) {
       for (let pixel=this.firstPixel; pixel<this.lastPixel; pixel++) {
-        state = this.seed ^ Math.imul(pixel,747796405) ^ Math.imul(sample,2891336453);
+        state = pcgHash(pixel+pcgHash(sample+this.seed));
         const u = (2*((pixel%size+random())/size)-1)*halfHeight;
         const v = (1-2*((Math.floor(pixel/size)+random())/size))*halfHeight;
         const ray = unit(add(forward,add(scale(right,u),scale(up,v))));

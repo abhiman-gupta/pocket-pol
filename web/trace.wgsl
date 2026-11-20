@@ -33,6 +33,14 @@ const eps = .0001;
 const identity = mat4x4f(vec4f(1,0,0,0), vec4f(0,1,0,0), vec4f(0,0,1,0), vec4f(0,0,0,1));
 const depolarizer = mat4x4f(vec4f(1,0,0,0), vec4f(0), vec4f(0), vec4f(0));
 
+// PCG hash. Seeding each pixel and sample through it decorrelates neighboring pixels, whose raw
+// seeds differ only linearly and otherwise show up as diagonal streaks at low sample counts.
+fn pcg_hash(x: u32) -> u32 {
+  let state = x*747796405u + 2891336453u;
+  let word = ((state >> ((state >> 28u) + 4u)) ^ state)*277803737u;
+  return (word >> 22u) ^ word;
+}
+
 fn random(rng: ptr<function, u32>) -> f32 {
   *rng = *rng * 1664525u + 1013904223u;
   return f32(*rng >> 8u) / 16777216.0;
@@ -258,7 +266,7 @@ fn render(@builtin(global_invocation_id) id: vec3u) {
   for (var c=0u; c<channels; c++) { total[c] = accumulation[offset+c]; }
   for (var i=0u; i<pass_info.y; i++) {
     let sample = pass_info.x+i;
-    var rng = pass_info.z ^ (index*747796405u) ^ (sample*2891336453u);
+    var rng = pcg_hash(index + pcg_hash(sample + pass_info.z));
     let size_f = f32(size);
     let u = (2*((f32(id.x)+random(&rng))/size_f)-1)*params.eye.w;
     let v = (1-2*((f32(id.y)+random(&rng))/size_f))*params.eye.w;

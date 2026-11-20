@@ -111,7 +111,8 @@ h1, h2, h3, dl, dd, p { margin: 0; }
   height: 100%;
   background: var(--stage);
 }
-#stage.preview #image { image-rendering: pixelated; }
+/* Drag previews are low resolution: scale them smoothly and soften them instead of showing blocks. */
+#stage.preview #image { image-rendering: auto; filter: blur(1.5px); }
 .stage-message {
   position: absolute;
   inset: 0;
