@@ -26,8 +26,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=45">
-  <script type="module" src="./app.mjs?v=45"></script>
+  <link rel="stylesheet" href="./style.css?v=46">
+  <script type="module" src="./app.mjs?v=46"></script>
 </head>
 <body>
   <main class="window">
@@ -110,20 +110,6 @@
       </section>
       </div>
 
-      <section id="scalarControls" class="adjustments card" aria-labelledby="adjustTitle" hidden>
-        <div class="section-head"><h2 id="adjustTitle">Image Adjustments</h2></div>
-        <label class="row">Color map <select id="map"></select></label>
-        <label class="row toggle">Show colorbar <input id="showColorbar" type="checkbox" role="switch" checked></label>
-        <div class="row">
-          <span>Range</span>
-          <div class="range">
-            <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
-            <span class="range-dash" aria-hidden="true">–</span>
-            <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
-          </div>
-        </div>
-        <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
-      </section>
 
       <p id="error" class="error-box" role="alert" hidden></p>
 
@@ -139,7 +125,7 @@
               <select id="preset"><option value="cornell">Cornell Box</option></select>
             </label>
             <div class="row">
-              <span id="depthLabel">Max path depth</span>
+              <span class="label-help"><span id="depthLabel">Max path depth</span><button type="button" class="help-button" aria-haspopup="dialog" data-help="depthHelp" aria-label="Explain max path depth">?</button></span>
               <div class="stepper" role="group" aria-labelledby="depthLabel">
                 <button id="depthDown" type="button" aria-label="Decrease max path depth">−</button>
                 <output id="depthValue" aria-live="polite">4</output>
@@ -176,6 +162,20 @@
         </div>
       </div>
 
+      <section id="scalarControls" class="adjustments card" aria-labelledby="adjustTitle" hidden>
+        <div class="section-head"><h2 id="adjustTitle">Image Adjustments <span class="advanced">(Advanced)</span></h2></div>
+        <label class="row">Color map <select id="map"></select></label>
+        <label class="row toggle">Show colorbar <input id="showColorbar" type="checkbox" role="switch" checked></label>
+        <div class="row">
+          <span>Range</span>
+          <div class="range">
+            <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
+            <span class="range-dash" aria-hidden="true">–</span>
+            <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
+          </div>
+        </div>
+        <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
+      </section>
     </aside>
   </main>
   <dialog id="helpDialog" class="help-window" aria-labelledby="helpTitle">
@@ -193,6 +193,12 @@
         <dt>Ellipticity</dt><dd>The shape of the polarization: 0 is linear, +1 right circular, −1 left circular, and values in between are elliptical.</dd>
       </dl>
       <dl id="filterHelp" class="help-list" hidden></dl>
+      <dl id="depthHelp" class="help-list" hidden>
+        <dt>Max path depth</dt><dd>The most surfaces a ray of light may bounce off on its way from the light source to the camera. Each bounce can change the light's polarization through the Mueller matrix of the surface it hits.</dd>
+        <dt>Low depth (1–2)</dt><dd>Depth 1 shows only the light source itself, and depth 2 adds direct lighting: surfaces lit straight from the lamp, with hard shadows and no color bleeding.</dd>
+        <dt>Higher depth (3 and up)</dt><dd>Adds indirect light that bounces between walls: softer shadows, red and green light spilling onto the white surfaces, and polarization patterns built up over several reflections. Renders take longer as depth grows, and the image changes less after a few bounces.</dd>
+        <dt>Try it</dt><dd>Step from 1 to 6 with Degree of Polarization or Q-Stokes selected and watch how each extra bounce changes the polarization.</dd>
+      </dl>
     </div>
   </dialog>
   <dialog id="exportDialog" class="export-window" aria-labelledby="exportTitle">

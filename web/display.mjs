@@ -1,5 +1,5 @@
-import {palettes} from "./palettes.mjs?v=45";
-import {clamp} from "./scene.mjs?v=45";
+import {palettes} from "./palettes.mjs?v=46";
+import {clamp} from "./scene.mjs?v=46";
 
 export const filters = {
   rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true,hint:"Total light reaching the camera, shown in color from the red, green, and blue channels."},

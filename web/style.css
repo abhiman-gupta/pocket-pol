@@ -825,3 +825,6 @@ dt, .hint { color: var(--muted); }
 /* RGB | R | G | B switch inside Image Filters, mirroring the one on the image */
 .channel-switch { display: grid; width: 100%; margin-bottom: 8px; }
 .channel-switch span { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; font-family: var(--display); font-size: .75rem; font-weight: 500; }
+.label-help { display: inline-flex; align-items: center; gap: 8px; }
+.label-help .help-button { width: 20px; height: 20px; font-size: .6875rem; }
+.advanced { color: var(--muted); font-size: .8125rem; letter-spacing: 0; }
