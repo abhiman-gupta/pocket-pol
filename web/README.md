@@ -41,11 +41,15 @@ The GPU and CPU paths use the same sampling sequence and film format. Floating-p
 
 ## Hosting
 
-GitHub Pages serves the public app at [pocket-pol.abhimangupta.com](https://pocket-pol.abhimangupta.com) from the root of the `gh-pages` branch. Publish the static browser assets from `web/` and keep the deployment branch's `CNAME` and `.nojekyll` files. Every relative module import, the worker and shader URLs, and the stylesheet and script links in `index.html` and `credits.html` share one `?v=` cache-busting number. Raise it everywhere at once before publishing a change:
+GitHub Pages serves the public app at [pocket-pol.abhimangupta.com](https://pocket-pol.abhimangupta.com) with HTTPS enforced. Every push to `main` that touches `web/` runs `.github/workflows/deploy.yml`, which publishes `web/` without the Node-only `render.mjs`, `headless.mjs`, and this README, and retries the Pages deploy step if GitHub reports a transient failure. The custom domain lives in the repository's Pages settings, so no `CNAME` file is needed.
+
+Every relative module import, the worker and shader URLs, and the stylesheet and script links in `index.html` and `credits.html` share one `?v=` cache-busting number. Raise it everywhere at once before publishing a change:
 
 ```sh
-perl -pi -e 's/\?v=\d+/?v=34/g' web/*.mjs web/*.html
-``` The headless command runs from the source branch.
+perl -pi -e 's/\?v=\d+/?v=57/g' web/*.mjs web/*.html
+```
+
+Both pages carry a Content Security Policy that allows only the site's own scripts, workers, and shader fetches, plus Google Fonts for the stylesheet and font files. Update it if the app starts loading anything from another origin.
 
 ## Credits and citation
 

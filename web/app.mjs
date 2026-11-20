@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=55";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=55";
-import {setupExport} from "./export.mjs?v=55";
+import {clamp,defaultScene} from "./scene.mjs?v=56";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=56";
+import {setupExport} from "./export.mjs?v=56";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=55",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=56",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -224,7 +224,12 @@ function updateLogSuggestion() {
 }
 
 const plain = value => Number(value.toPrecision(3)).toString().replace("-","−");
-const power = k => k===0 ? "10<sup>0</sup>" : "10<sup>"+String(k).replace("-","−")+"</sup>";
+// Power-of-ten labels are built as DOM nodes ("10" plus a superscript), never parsed as HTML.
+const power = k => {
+  const exponent = document.createElement("sup");
+  exponent.textContent = String(k).replace("-","−");
+  return ["10",exponent];
+};
 // Linear colorbars mark the ends and middle. Log colorbars mark each power of ten.
 function colorbarTicks(spec) {
   const {minimum,maximum} = display;
@@ -267,7 +272,7 @@ function draw() {
     el("barTicks").replaceChildren(...colorbarTicks(spec).map(([position,label]) => {
       const tick = document.createElement("output");
       tick.style.setProperty("--at",position*100+"%");
-      tick.innerHTML = label;
+      tick.append(...(Array.isArray(label) ? label : [label]));
       return tick;
     }));
     // Phones lay the colorbar under the image, so its gradient runs left to right.

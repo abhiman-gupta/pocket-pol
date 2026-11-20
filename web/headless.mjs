@@ -1,8 +1,8 @@
 import {availableParallelism} from "node:os";
 import {readFile} from "node:fs/promises";
 import {Worker,isMainThread,parentPort,workerData} from "node:worker_threads";
-import {Estimate} from "./renderer.mjs?v=55";
-import {openGpu} from "./gpu.mjs?v=55";
+import {Estimate} from "./renderer.mjs?v=56";
+import {openGpu} from "./gpu.mjs?v=56";
 
 export const defaultWorkers = Math.min(8,availableParallelism());
 

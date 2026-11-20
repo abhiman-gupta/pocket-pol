@@ -1,5 +1,5 @@
-import {Estimate} from "./renderer.mjs?v=55";
-import {openGpu} from "./gpu.mjs?v=55";
+import {Estimate} from "./renderer.mjs?v=56";
+import {openGpu} from "./gpu.mjs?v=56";
 
 let gpu;
 let estimate;
