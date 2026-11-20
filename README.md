@@ -1,6 +1,8 @@
 # Pocket Pol
 
-**Pocket Polarization** is a physically based polarization renderer that runs in your browser, on desktop or phone, with nothing to install. Change the light's polarization, rotate an analyzer, and inspect intensity and the Stokes channels of a Cornell box rendered with WebGPU (with a CPU fallback).
+A physically based polarization renderer that runs entirely in your browser. No downloads. No command line.
+
+**Pocket Polarization** works on desktop and phone. Change the light's polarization, rotate an analyzer, and inspect intensity and the Stokes channels of a Cornell box rendered with WebGPU (with a CPU fallback).
 
 **Try it:** https://pocket-pol.abhimangupta.com
 

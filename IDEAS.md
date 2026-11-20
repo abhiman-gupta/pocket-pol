@@ -79,6 +79,8 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Colorbar space only when needed on phones.** On phones, collapse the space under the image when the active filter has no colorbar, such as RGB Intensity, so the Re-render bar sits right under the render.
 
+- [x] **Tagline.** Subtitle, README, and GitHub description read “A physically based polarization renderer that runs entirely in your browser. No downloads. No command line.” “No command line” describes the site visitor's experience; the headless renderer is a developer tool.
+
 - Use neutral graphite and silver for the controls and interface accents, leaving saturated color to the rendered scene and material swatches.
 - Make the render the focal point. Pair the render with a light, tabbed inspector for Scene, Display, and Camera. Keep render actions together and exports beside the viewport.
 - Put the polarization view selector, its explanations, and the analyzer angle in a dedicated Filter section in the control panel. Omit the explanatory sentence for RGB Intensity. Make source polarization easy to find, and distinguish live display adjustments from scene edits that need a fresh estimate.
