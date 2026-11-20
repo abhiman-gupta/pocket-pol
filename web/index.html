@@ -4,19 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Polarization: A web-based physically based renderer</title>
-  <link rel="stylesheet" href="./style.css?v=14">
+  <link rel="stylesheet" href="./style.css?v=15">
   <script type="module" src="./app.mjs?v=9"></script>
 </head>
 <body>
   <main class="window">
     <h1 class="page-title"><strong>Pocket Polarization</strong><span class="page-subtitle">: A web-based physically based renderer</span></h1>
     <section class="viewer" aria-label="Render viewport">
-      <header class="viewer-header">
-        <h2 id="imageTitle">Cornell Box</h2>
-        <label class="view-mode"><span class="visually-hidden">Polarization view</span><select id="filter" aria-describedby="viewHint"></select></label>
-      </header>
-      <p id="viewHint" class="view-hint" hidden></p>
-      <div id="analyzerControl" hidden></div>
+      <h2 id="imageTitle">Cornell Box</h2>
       <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
         <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
         <div id="colorbar" class="colorbar" role="group" aria-labelledby="barTitle" hidden>
@@ -99,6 +94,13 @@
           </fieldset>
         </div>
       </div>
+      <section class="filter-panel" aria-labelledby="filterTitle">
+        <h2 id="filterTitle">Filter</h2>
+        <label class="visually-hidden" for="filter">Polarization view</label>
+        <select id="filter" aria-describedby="viewHint"></select>
+        <p id="viewHint" class="view-hint" hidden></p>
+        <div id="analyzerControl" hidden></div>
+      </section>
       <fieldset id="statistics" class="estimate-panel">
         <legend class="visually-hidden">Render</legend>
         <h2>Render</h2>
