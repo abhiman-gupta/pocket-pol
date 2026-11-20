@@ -55,6 +55,8 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 - Credit Mitsuba 3 and its contributors, Pollia, PolRay, and the Jarecki model research in the app and source documentation. Ship the upstream license and preferred Mitsuba 3 citation with the browser build.
 - Credit `cmtribble3`, `abhiman-gupta`, and `kupinski` as Pollia’s developers on GitHub.
 
+- [x] **Automatic deploys with GitHub Actions.** Every push to `main` that touches `web/` publishes the site through `.github/workflows/deploy.yml`, so the live site always matches committed source. Pages uses the GitHub Actions source with the custom domain and Enforce HTTPS kept in settings.
+
 ## Design preferences
 
 - [x] **Polish the browser styling.** (Title superseded by the minimal title entry above.) Group the settings and render action in one inspector and use a restrained neutral palette so the render remains the focus.
