@@ -1,4 +1,4 @@
-// Cornell geometry and material parameters from cmtribble3/pollia (a8c7d7ea).
+// Cornell geometry and material parameters from Pollia (a8c7d7ea).
 export const add = (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
 export const sub = (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
 export const scale = (a,s) => [a[0]*s, a[1]*s, a[2]*s];

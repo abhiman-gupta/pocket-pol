@@ -54,7 +54,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 - [x] Build the Pollia-style browser version on `test-pocket-pol-web`. Use native Pollia to compare the browser renderer's output.
 - [x] **Full credits.** Credit Mitsuba 3 and its contributors, Pollia, PolRay, and the Jarecki model research in the app and source documentation. The credits page explains that Pollia is built as a fork of Mitsuba 3, lists what Pocket Pol adapts from Pollia and PolRay, cites the Jarecki and Kupinski paper with its DOI, credits the DM Sans and DM Mono fonts (OFL 1.1), reproduces the BSD 3-Clause notice, and states that Pocket Pol is not affiliated with or endorsed by EPFL or the Mitsuba 3 developers.
 - [x] **Pocket Pol license.** Pocket Pol is released under the BSD 3-Clause License, © 2026 Abhiman Gupta (root `LICENSE`). `web/LICENSE` ships with the site and adds Mitsuba's original notice for the portions adapted from Pollia and Mitsuba 3. Ship the upstream license and preferred Mitsuba 3 citation with the browser build.
-- Credit `cmtribble3`, `abhiman-gupta`, and `kupinski` as Pollia’s developers on GitHub.
+- Credit Charlie Tribble, Abhiman Gupta, and Matthew Kupinski by name (no GitHub handles) as Pollia’s developers.
 
 - [x] **Automatic deploys with GitHub Actions.** Every push to `main` that touches `web/` publishes the site through `.github/workflows/deploy.yml`, so the live site always matches committed source. Pages uses the GitHub Actions source with the custom domain and Enforce HTTPS kept in settings.
 

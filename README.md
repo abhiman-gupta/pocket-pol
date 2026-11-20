@@ -10,7 +10,7 @@ The app lives in [`web/`](web/). See [`web/README.md`](web/README.md) for runnin
 
 ## Credits
 
-Pocket Pol brings the polarization models of [Pollia](https://github.com/cmtribble3/pollia) to the browser. Pollia is a research renderer for polarized light transport, built as a fork of [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3) and developed by cmtribble3, Abhiman Gupta, and kupinski. Pocket Pol adapts Pollia's interactive window, its implementation of the Jarecki material model, its polarized emitter and Mueller transport, and its display filters and color maps.
+Pocket Pol brings the polarization models of [Pollia](https://github.com/cmtribble3/pollia) to the browser. Pollia is a research renderer for polarized light transport, built as a fork of [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3) and developed by Charlie Tribble, Abhiman Gupta, and Matthew Kupinski. Pocket Pol adapts Pollia's interactive window, its implementation of the Jarecki material model, its polarized emitter and Mueller transport, and its display filters and color maps.
 
 - **Mitsuba 3**, created by Wenzel Jakob at EPFL's Realistic Graphics Lab, is the foundation Pollia builds on. Pocket Pol's Cornell box geometry also follows Mitsuba's Cornell box scene. Its preferred citation ships in [`web/mitsuba3.bib`](web/mitsuba3.bib).
 - **PolRay** supplied the default Cornell box layout and reflectances, the analyzer wheel's design, and Pollia's nylon material parameters and color tables.
