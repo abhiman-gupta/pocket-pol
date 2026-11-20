@@ -35,6 +35,8 @@ npm install --no-save --package-lock=false webgpu@0.6.2
 node web/render.mjs --backend webgpu --scene cornell --size 512 --spp 256 --out cornell
 ```
 
+To check that the WebGPU and CPU renderers agree, run `node bench/agreement.mjs` from the repository root with the same package installed. It renders the default and a polarized-light Cornell box on both backends with the same seed and reports per-pixel Stokes differences next to the Monte Carlo noise.
+
 The GPU and CPU paths use the same sampling sequence and film format. Floating-point rounding can differ across GPU and CPU renders.
 
 ## Hosting

@@ -1,5 +1,5 @@
-import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=54";
-import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=54";
+import {add,sub,scale,dot,cross,unit,makeScene} from "./scene.mjs?v=55";
+import {jarecki,applyMatrix,product,identity,emitted,sensorStokes} from "./polarization.mjs?v=55";
 
 const EPS = .0001;
 const PI = Math.PI;
@@ -16,7 +16,9 @@ function intersect(shapes,origin,ray,limit = Infinity,shadow = false) {
   let hit = null;
   for (const shape of shapes) {
     const denominator = dot(ray,shape.normal);
-    if (Math.abs(denominator)<EPS) continue;
+    // Cutaway room walls (see scene.mjs) are skipped from behind, matching trace.wgsl; everything
+    // else, such as the lamp and the blocks, still blocks light from either side.
+    if (shape.cutaway ? denominator > -EPS : Math.abs(denominator)<EPS) continue;
     const delta = sub(shape.corner,origin);
     const distance = dot(delta,shape.normal)/denominator;
     if (distance <= EPS || distance >= limit) continue;

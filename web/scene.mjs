@@ -54,12 +54,17 @@ export function makeScene(settings) {
   // Pollia takes the green material coefficients in mono, but Mitsuba's RGB emitter converts to luminance.
   const emitter = channels.length === 1 ? [dot(radiance,luminanceWeights)] : radiance;
   light.emission = emitter.map(value => value*settings.light_scale);
-  const shapes = [
+  // The room's five walls are cutaways: seen from behind (outside the box) they are skipped, so
+  // orbiting past a wall shows the inside instead of the wall's unlit back.
+  const room = [
     quad([-1,-1,-1],[0,0,2],[2,0,0],whiteNylon),
     quad([-1,1,-1],[2,0,0],[0,0,2],whiteNylon),
     quad([-1,-1,-1],[2,0,0],[0,2,0],whiteNylon),
     quad([-1,-1,-1],[0,2,0],[0,0,2],material(red)),
     quad([1,-1,-1],[0,0,2],[0,2,0],material(green)),
+  ].map(wall => Object.assign(wall,{cutaway:true}));
+  const shapes = [
+    ...room,
     light,
     ...box([.335,-.7,.38],-17,.3,whiteNylon),
     // Mitsuba's cornell_box() centers this block at y = -0.4, which sinks it 0.01 into the floor.

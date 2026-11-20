@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=54";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=54";
-import {setupExport} from "./export.mjs?v=54";
+import {clamp,defaultScene} from "./scene.mjs?v=55";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=55";
+import {setupExport} from "./export.mjs?v=55";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=54",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=55",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -240,6 +240,11 @@ function colorbarTicks(spec) {
     const label = shifted && minimum!==0 ? plain(minimum+10**k) : power(k);
     ticks.push([Math.log(10**k/low)/Math.log(high/low),label]);
   }
+  // A narrow range may hold one power of ten or none, so label its ends as well.
+  if (ticks.length<2) {
+    const ends = [[0,plain(shifted ? minimum+low : low)],[1,plain(maximum)]];
+    for (const end of ends) if (!ticks.some(([at]) => Math.abs(at-end[0])<.08)) ticks.push(end);
+  }
   return ticks;
 }
 
@@ -386,30 +391,6 @@ worker.onmessage = ({data}) => {
   updateButtons();
 };
 
-const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
-function selectPanel(selected) {
-  for (const tab of tabs) {
-    const active = tab === selected;
-    tab.setAttribute("aria-selected",String(active));
-    tab.tabIndex = active ? 0 : -1;
-    el(tab.getAttribute("aria-controls")).hidden = !active;
-  }
-}
-for (const tab of tabs) {
-  tab.addEventListener("click",() => selectPanel(tab));
-  tab.addEventListener("keydown",event => {
-    const index = tabs.indexOf(tab);
-    const target = {
-      ArrowLeft:tabs[(index+tabs.length-1)%tabs.length], ArrowRight:tabs[(index+1)%tabs.length],
-      Home:tabs[0], End:tabs.at(-1),
-    }[event.key];
-    if (!target) return;
-    event.preventDefault();
-    selectPanel(target);
-    target.focus();
-  });
-}
-
 function stop() {
   if (!running || stopping) return;
   stopping = true;
@@ -426,9 +407,16 @@ function renderSoon() {
   updateButtons();
 }
 
-el("estimateForm").addEventListener("submit",event => {event.preventDefault(); renderCamera();});
+// Enter in the field both submits and commits a change, so start a render only when the count differs.
+function renderSamples() {
+  const spp = el("spp");
+  if (!spp.validity.valid) return;
+  if (spp.valueAsNumber === requested && (running || cameraRenderPending || frame?.samples === requested)) return;
+  renderCamera();
+}
+el("estimateForm").addEventListener("submit",event => {event.preventDefault(); renderSamples();});
 el("spp").addEventListener("input",updateButtons);
-el("spp").addEventListener("change",() => {if (el("spp").validity.valid) renderCamera();});
+el("spp").addEventListener("change",renderSamples);
 for (const button of document.querySelectorAll("[data-spp]")) {
   button.addEventListener("click",() => {
     if (el("spp").value === button.dataset.spp && (running || frame?.samples === requested)) return;

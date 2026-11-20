@@ -1,7 +1,7 @@
-import {makeScene} from "./scene.mjs?v=54";
+import {makeScene} from "./scene.mjs?v=55";
 
 async function browserShader() {
-  const response = await fetch(new URL("./trace.wgsl?v=54",import.meta.url));
+  const response = await fetch(new URL("./trace.wgsl?v=55",import.meta.url));
   if (!response.ok) throw new Error("Could not load the WebGPU shader");
   return response.text();
 }
@@ -67,7 +67,8 @@ function sceneBuffers(settings) {
     }
     geometry.set([
       ...shape.corner,unique.get(shape.material),
-      ...shape.u,shape.invU,...shape.v,shape.invV,...shape.normal,shape.area,
+      // A negative area marks a cutaway wall for trace.wgsl; only the lamp's area is ever read.
+      ...shape.u,shape.invU,...shape.v,shape.invV,...shape.normal,shape.cutaway ? -shape.area : shape.area,
     ],index*16);
   });
   const params = new ArrayBuffer(7*16);

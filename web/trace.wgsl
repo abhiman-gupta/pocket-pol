@@ -51,7 +51,11 @@ fn intersect(origin: vec3f, ray: vec3f, limit: f32, shadow: bool) -> Hit {
   for (var index = 0u; index < arrayLength(&shapes); index++) {
     let shape = shapes[index];
     let denom = dot(ray,shape.normal.xyz);
-    if (abs(denom) < eps) { continue; }
+    // Cutaway room walls carry a negative area (normal.w, read only for the lamp) and are skipped
+    // from behind, so orbiting past a wall shows the inside. Other shapes block from either side.
+    if (shape.normal.w < 0) {
+      if (denom > -eps) { continue; }
+    } else if (abs(denom) < eps) { continue; }
     let delta = shape.corner.xyz-origin;
     let t = dot(delta,shape.normal.xyz)/denom;
     if (t <= eps || t >= hit.distance) { continue; }
