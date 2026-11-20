@@ -16,4 +16,8 @@ Pocket Pol brings the polarization models of [Pollia](https://github.com/cmtribb
 - **PolRay** supplied the default Cornell box layout and reflectances, the analyzer wheel's design, and Pollia's nylon material parameters and color tables.
 - **The Jarecki material model** comes from Quinn Jarecki and Meredith Kupinski, "Efficient Modeling of Depolarizing Mueller BRDFs," [arXiv:2307.11976](https://doi.org/10.48550/arXiv.2307.11976) (2023).
 
-Mitsuba 3 and Pollia are distributed under a BSD 3-Clause license (© 2017 Wenzel Jakob). Its full text ships in [`web/LICENSE`](web/LICENSE). Pocket Pol is independent and not affiliated with or endorsed by EPFL or the Mitsuba 3 developers. Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).
+## License
+
+Pocket Pol is released under the [BSD 3-Clause License](LICENSE), © 2026 Abhiman Gupta. Portions adapted from Pollia and Mitsuba 3 remain under Mitsuba's BSD 3-Clause license (© 2017 Wenzel Jakob). [`web/LICENSE`](web/LICENSE), which ships with the site, contains both notices.
+
+Pocket Pol is independent and not affiliated with or endorsed by EPFL or the Mitsuba 3 developers. Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).
