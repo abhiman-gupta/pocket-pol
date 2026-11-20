@@ -1,13 +1,12 @@
 import {clamp,defaultScene} from "./scene.mjs";
 import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=3";
-import {exportChannels} from "./renderer.mjs";
-import {zipFiles} from "./files.mjs";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
+const saveImage = el("saveImage");
 const worker = new Worker(new URL("./worker.mjs?v=5",import.meta.url),{type:"module"});
 const controls = {};
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
@@ -399,35 +398,29 @@ function needsDefaultCamera(outputFrame) {
   return yaw!==defaultScene.yaw || pitch!==defaultScene.pitch || distance!==defaultScene.distance;
 }
 
-function saveExport(button,outputFrame,displaySettings) {
-  if (button.id === "saveImage") {
-    const output = document.createElement("canvas");
-    output.width = output.height = outputFrame.size;
-    const pixels = displayPixels(outputFrame,displaySettings);
-    output.getContext("2d",{alpha:false}).putImageData(new ImageData(pixels,output.width,output.height),0,0);
-    output.toBlob(blob => {
-      if (blob) download(blob,"pocket-pol.png");
-    },"image/png");
-    return;
-  }
-  const {bytes,metadata} = exportChannels(outputFrame);
-  const json = new TextEncoder().encode(JSON.stringify(metadata,null,2)+"\n");
-  download(zipFiles([["pocket-pol.f32",bytes],["pocket-pol.f32.json",json]]),"pocket-pol-channels.zip");
+function savePng(outputFrame,displaySettings) {
+  const output = document.createElement("canvas");
+  output.width = output.height = outputFrame.size;
+  const pixels = displayPixels(outputFrame,displaySettings);
+  output.getContext("2d",{alpha:false}).putImageData(new ImageData(pixels,output.width,output.height),0,0);
+  output.toBlob(blob => {
+    if (blob) download(blob,"pocket-pol.png");
+  },"image/png");
 }
 
-function requestExport(button) {
+function requestExport() {
   if (!frame || el("export").disabled) return;
   const displaySettings = {...display};
   if (!needsDefaultCamera(frame)) {
-    saveExport(button,frame,displaySettings);
+    savePng(frame,displaySettings);
     return;
   }
   if (exportCache?.source === frame) {
-    saveExport(button,exportCache.frame,displaySettings);
+    savePng(exportCache.frame,displaySettings);
     return;
   }
-  exportRequest = {source:frame,button,label:button.textContent,displaySettings};
-  button.textContent = "Preparing…";
+  exportRequest = {source:frame,label:saveImage.textContent,displaySettings};
+  saveImage.textContent = "Preparing…";
   el("exportStatus").textContent = "Rendering from the default camera.";
   updateButtons();
   const {yaw,pitch,distance} = defaultScene;
@@ -439,9 +432,9 @@ function requestExport(button) {
 
 function finishExport(data) {
   if (!exportRequest) return;
-  const {source,button,label,displaySettings} = exportRequest;
+  const {source,label,displaySettings} = exportRequest;
   exportRequest = undefined;
-  button.textContent = label;
+  saveImage.textContent = label;
   updateButtons();
   if (data.type === "export-error") {
     el("exportStatus").textContent = "";
@@ -451,12 +444,10 @@ function finishExport(data) {
   }
   el("exportStatus").textContent = "Default-camera export ready.";
   exportCache = {source,frame:data.frame};
-  saveExport(button,data.frame,displaySettings);
+  savePng(data.frame,displaySettings);
 }
 
-for (const id of ["saveImage","saveChannels"]) {
-  el(id).addEventListener("click",event => requestExport(event.currentTarget));
-}
+saveImage.addEventListener("click",requestExport);
 
 updateFilterOptions();
 updateSourceControls();
