@@ -10,4 +10,4 @@ The app lives in [`web/`](web/). See [`web/README.md`](web/README.md) for runnin
 
 ## Credits
 
-Pocket Pol follows [Pollia](https://github.com/cmtribble3/pollia) (by cmtribble3, abhiman-gupta, and kupinski) for its interface, Jarecki material model, and Mueller transport, and PolRay for its starting scene. It builds on [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3)'s Cornell box scene; Mitsuba's license and preferred citation ship in [`web/LICENSE`](web/LICENSE) and [`web/mitsuba3.bib`](web/mitsuba3.bib). Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).
+Pocket Pol follows [Pollia](https://github.com/cmtribble3/pollia) (by cmtribble3, Abhiman Gupta, and kupinski) for its interface, Jarecki material model, and Mueller transport, and PolRay for its starting scene. It builds on [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3)'s Cornell box scene; Mitsuba's license and preferred citation ship in [`web/LICENSE`](web/LICENSE) and [`web/mitsuba3.bib`](web/mitsuba3.bib). Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).
