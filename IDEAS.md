@@ -68,9 +68,9 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Analyzer angle slider.** In the Filter section, the Analyzer and RGB Analyzer views show an Analyzer angle slider from 0° to 180° in 1° steps, styled like the light source sliders, and the image updates live as it moves. It replaced the PolRay-style analyzer wheel to save space. The analyzer is linear only; the 0°/45°/90°/135°/RCP/LCP preset buttons were removed earlier.
 
-- [x] **Creator credit under the subtitle.** Below “No downloads. No command line.”, show “Created by Abhiman Gupta” with the underlined name linking to the abhimangupta.com homepage.
+- [x] **Creator credit under the subtitle.** Below “No downloads. No command line.”, show “Created by Abhiman Gupta” with the underlined name linking to the abhimangupta.com homepage. The footer link reads “Further credits and licenses”.
 
-- [x] **Light slider labels on one line.** Degree of polarization, angle of polarization, and ellipticity labels and values are one point smaller, and the Light Source card is wider than Filter beside it, so each label and value fit on one line on desktop even at 100% DoP or −90.0°. Phones still wrap the two long labels.
+- [x] **Light slider labels on one line.** Degree of polarization, angle of polarization, and ellipticity labels and values are one point smaller, and when the sidebar is at least 360 px wide the Light Source card is wider than Filter beside it, so each label and value fit on one line even at 100% DoP or −90.0°. Narrower sidebars (phones, and desktops around 1024 px) keep equal cards so the filter name is not cut off, and wrap the two long labels.
 
 - [ ] **Phone layout for Light Source and Filter.** On phones the Filter card sits beside the taller Light Source column. Filter no longer stretches to match its height, which removes the empty space inside the card with RGB Intensity, but the column next to Light Source is still empty. Revisit the arrangement for readability.
 

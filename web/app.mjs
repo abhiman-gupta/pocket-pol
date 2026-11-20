@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=31";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=31";
+import {clamp,defaultScene} from "./scene.mjs?v=33";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=33";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
-const worker = new Worker(new URL("./worker.mjs?v=31",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=33",import.meta.url),{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";

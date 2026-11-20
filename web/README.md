@@ -42,7 +42,7 @@ The GPU and CPU paths use the same sampling sequence and film format. Floating-p
 GitHub Pages serves the public app at [pocket-pol.abhimangupta.com](https://pocket-pol.abhimangupta.com) from the root of the `gh-pages` branch. Publish the static browser assets from `web/` and keep the deployment branch's `CNAME` and `.nojekyll` files. Every relative module import, the worker and shader URLs, and the stylesheet and script links in `index.html` and `credits.html` share one `?v=` cache-busting number. Raise it everywhere at once before publishing a change:
 
 ```sh
-perl -pi -e 's/\?v=\d+/?v=31/g' web/*.mjs web/*.html
+perl -pi -e 's/\?v=\d+/?v=33/g' web/*.mjs web/*.html
 ``` The headless command runs from the source branch.
 
 ## Credits and citation
