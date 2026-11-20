@@ -1,5 +1,5 @@
-import {Estimate} from "./renderer.mjs?v=28";
-import {openGpu} from "./gpu.mjs?v=28";
+import {Estimate} from "./renderer.mjs?v=30";
+import {openGpu} from "./gpu.mjs?v=30";
 
 let gpu;
 let estimate;
@@ -114,6 +114,10 @@ self.onmessage = async ({data}) => {
     clearTimeout(timer);
     stopping = true;
     if (!inFlight) finishStop();
+    return;
+  }
+  if (data.type === "cap") {
+    remaining = Math.max(0,Math.min(remaining,data.samples-(estimate?.samples ?? 0)));
     return;
   }
   if (data.type !== "fresh") return;

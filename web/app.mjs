@@ -1,15 +1,18 @@
-import {clamp,defaultScene} from "./scene.mjs?v=28";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=28";
+import {clamp,defaultScene} from "./scene.mjs?v=30";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=30";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
-const worker = new Worker(new URL("./worker.mjs?v=28",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=30",import.meta.url),{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
+const cpuSamples = 8;
+let cpuFallback = forceCpu;
+if (forceCpu) el("spp").value = cpuSamples;
 let frame;
 let previewFrame;
 let previewRequest;
@@ -260,6 +263,16 @@ worker.onmessage = ({data}) => {
   }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
+    // The CPU renderer is far slower, so drop to 8 SPP the first time it takes over.
+    if (!cpuFallback) {
+      cpuFallback = true;
+      if (el("spp").valueAsNumber>cpuSamples) el("spp").value = cpuSamples;
+      if (running && requested>cpuSamples) {
+        requested = cpuSamples;
+        worker.postMessage({type:"cap",samples:cpuSamples});
+      }
+      updateButtons();
+    }
     el("gpuNote").textContent = data.message;
     // Compare with the page itself to tell a worker limitation from a missing GPU.
     Promise.resolve(navigator.gpu?.requestAdapter()).catch(() => null).then(adapter => {

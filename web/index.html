@@ -11,20 +11,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=29">
-  <script type="module" src="./app.mjs?v=28"></script>
+  <link rel="stylesheet" href="./style.css?v=30">
+  <script type="module" src="./app.mjs?v=30"></script>
 </head>
 <body>
   <main class="window">
     <header class="page-header">
       <h1 class="page-title">Pocket Pol</h1>
       <p class="page-subtitle">A physically based polarization renderer that runs entirely in your browser. No downloads. No command line.</p>
+      <p class="page-credit">Created by <a href="https://abhimangupta.com/">Abhiman Gupta</a></p>
     </header>
 
     <section class="viewer" aria-label="Render viewport">
       <div class="figure">
         <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag to orbit the camera.">
-          <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
+          <canvas id="image" width="512" height="512" aria-label="Rendered Cornell Box"></canvas>
           <div id="stageMessage" class="stage-message" aria-hidden="true"><span class="spinner"></span><span id="stageMessageText">Starting renderer…</span></div>
           <progress id="progress" aria-label="Render progress" max="1" value="0"></progress>
         </div>
@@ -94,9 +95,8 @@
         <div class="section-head"><h2>Render</h2></div>
         <p id="sceneChanges" class="pending-changes" role="status" hidden>Scene settings changed. Start a fresh render to apply them.</p>
         <form id="estimateForm" novalidate>
-          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="8" inputmode="numeric"></label>
+          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="64" inputmode="numeric"></label>
           <div class="spp-presets" role="group" aria-label="Sample presets">
-            <button type="button" data-spp="8">8</button>
             <button type="button" data-spp="64">64</button>
             <button type="button" data-spp="256">256</button>
             <button type="button" data-spp="1024">1024</button>
@@ -140,7 +140,7 @@
               </div>
               <input type="hidden" id="channels" value="rgb">
             </div>
-            <input type="hidden" id="size" value="256">
+            <input type="hidden" id="size" value="512">
             <details>
               <summary>Advanced path settings</summary>
               <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4" inputmode="numeric"></label>

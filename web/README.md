@@ -12,7 +12,7 @@ Serve this directory from the repository root and open http://127.0.0.1:8000.
 python3 -m http.server 8000 --bind 127.0.0.1 --directory web
 ```
 
-Choose RGB or monochrome polarized channels. The browser renders at 256 × 256 pixels; the headless renderer also accepts 128 × 128. **Fresh render** starts from zero and progressively accumulates the selected number of samples per pixel. The initial render uses the same sample count shown in the controls. The same button becomes **Stop** during rendering and keeps the partial estimate when pressed. Display filters, exposure, analyzer angle, color map, and range operate on the accumulated result. Drag to orbit the camera around the Cornell box. The viewport updates with a one-sample render at half resolution on WebGPU, or at most 64 × 64 on CPU. A fresh render at the selected resolution and sample count starts on release. Display zoom only magnifies the image on screen and never changes the render. Below the image, **Re-render** on the left applies changed scene settings and stands out when there are edits to apply, and **Reset camera** on the right restores the default view. Camera distance needs a fresh render. 
+Choose RGB or monochrome polarized channels. The browser renders at 512 × 512 pixels and defaults to 64 samples per pixel, or 8 when it falls back to the CPU renderer; the headless renderer also accepts 128 × 128 and 256 × 256. **Fresh render** starts from zero and progressively accumulates the selected number of samples per pixel. The initial render uses the same sample count shown in the controls. The same button becomes **Stop** during rendering and keeps the partial estimate when pressed. Display filters, exposure, analyzer angle, color map, and range operate on the accumulated result. Drag to orbit the camera around the Cornell box. The viewport updates with a one-sample render at half resolution on WebGPU, or at most 64 × 64 on CPU. A fresh render at the selected resolution and sample count starts on release. Display zoom only magnifies the image on screen and never changes the render. Below the image, **Re-render** on the left applies changed scene settings and stands out when there are edits to apply, and **Reset camera** on the right restores the default view. Camera distance needs a fresh render. 
 
 The browser selects hardware WebGPU automatically. Append `?stats` to the app URL to show the active renderer, timings, and any GPU fallback note. The CPU fallback runs in a worker. To compare on the same device, append `?backend=cpu` to the app URL.
 
@@ -23,7 +23,7 @@ The headless renderer exports PNGs, raw Stokes channels, and their JSON metadata
 Run from the repository root with Node.js 20 or newer.
 
 ```sh
-node web/render.mjs --scene cornell --size 256 --channels rgb --spp 256 --out cornell
+node web/render.mjs --scene cornell --size 512 --channels rgb --spp 256 --out cornell
 ```
 
 The command writes `cornell.png`, `cornell.f32`, and `cornell.f32.json`. CPU renders use up to eight workers by default. Use `--backend cpu --workers 1` to run a single CPU thread, or `--help` for other options.
@@ -32,7 +32,7 @@ For hardware acceleration in Node.js, install the optional Dawn binding and sele
 
 ```sh
 npm install --no-save --package-lock=false webgpu@0.6.2
-node web/render.mjs --backend webgpu --scene cornell --size 256 --spp 256 --out cornell
+node web/render.mjs --backend webgpu --scene cornell --size 512 --spp 256 --out cornell
 ```
 
 The GPU and CPU paths use the same sampling sequence and film format. Floating-point rounding can differ across GPU and CPU renders.
@@ -42,7 +42,7 @@ The GPU and CPU paths use the same sampling sequence and film format. Floating-p
 GitHub Pages serves the public app at [pocket-pol.abhimangupta.com](https://pocket-pol.abhimangupta.com) from the root of the `gh-pages` branch. Publish the static browser assets from `web/` and keep the deployment branch's `CNAME` and `.nojekyll` files. Every relative module import, the worker and shader URLs, and the stylesheet and script links in `index.html` and `credits.html` share one `?v=` cache-busting number. Raise it everywhere at once before publishing a change:
 
 ```sh
-perl -pi -e 's/\?v=\d+/?v=28/g' web/*.mjs web/*.html
+perl -pi -e 's/\?v=\d+/?v=30/g' web/*.mjs web/*.html
 ``` The headless command runs from the source branch.
 
 ## Credits and citation

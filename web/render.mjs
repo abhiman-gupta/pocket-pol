@@ -1,15 +1,15 @@
 import {parseArgs} from "node:util";
 import {writeFile} from "node:fs/promises";
 import {deflateSync} from "node:zlib";
-import {defaultScene} from "./scene.mjs?v=28";
-import {exportChannels} from "./renderer.mjs?v=28";
-import {defaultWorkers,renderHeadless,renderHeadlessGpu} from "./headless.mjs?v=28";
-import {displayDefaults,displayPixels,filters} from "./display.mjs?v=28";
-import {crc32} from "./files.mjs?v=28";
+import {defaultScene} from "./scene.mjs?v=30";
+import {exportChannels} from "./renderer.mjs?v=30";
+import {defaultWorkers,renderHeadless,renderHeadlessGpu} from "./headless.mjs?v=30";
+import {displayDefaults,displayPixels,filters} from "./display.mjs?v=30";
+import {crc32} from "./files.mjs?v=30";
 
 const usage = `Usage: node render.mjs --scene cornell --spp 256 --out cornell
 Options:
-  --size 128|256                      Default: 256
+  --size 128|256|512                  Default: 512
   --channels rgb|mono                 Default: rgb
   --spp positive integer              Default: 256
   --seed uint32                       Default: 0
@@ -68,7 +68,7 @@ async function main() {
   const {values} = parseArgs({options:{
     help:{type:"boolean",short:"h"},
     scene:{type:"string",default:"cornell"},
-    size:{type:"string",default:"256"},
+    size:{type:"string",default:"512"},
     channels:{type:"string",default:"rgb"},
     spp:{type:"string",default:"256"},
     seed:{type:"string",default:"0"},
@@ -82,7 +82,7 @@ async function main() {
   }});
   if (values.help) {console.log(usage); return;}
   if (values.scene!=="cornell") throw new Error("Only the cornell preset is available");
-  if (!["128","256"].includes(values.size)) throw new Error("--size must be 128 or 256");
+  if (!["128","256","512"].includes(values.size)) throw new Error("--size must be 128, 256, or 512");
   if (!["rgb","mono"].includes(values.channels)) throw new Error("--channels must be rgb or mono");
   const filter = values.filter ?? (values.channels==="rgb" ? "rgbIntensity" : "intensity");
   if (!Object.hasOwn(filters,filter) || (filters[filter].rgb && values.channels==="mono")) throw new Error("Filter is unavailable for these channels");
