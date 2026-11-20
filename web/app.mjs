@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=44";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=44";
-import {setupExport} from "./export.mjs?v=44";
+import {clamp,defaultScene} from "./scene.mjs?v=45";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=45";
+import {setupExport} from "./export.mjs?v=45";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=44",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=45",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -117,7 +117,7 @@ function setStatus(text) {
 
 // The (?) buttons open a dialog with short explanations; it scrolls on its own on small screens.
 const helpDialog = el("helpDialog");
-const helpTitles = {lightHelp:"Light Source",filterHelp:"Display Filters"};
+const helpTitles = {lightHelp:"Light Source",filterHelp:"Image Filters"};
 for (const button of document.querySelectorAll(".help-button")) {
   button.addEventListener("click",() => {
     for (const id of Object.keys(helpTitles)) el(id).hidden = id !== button.dataset.help;
@@ -147,11 +147,9 @@ const counterpart = {rgbIntensity:"intensity",rgbAnalyzer:"analyzer",intensity:"
 function updateFilterOptions(wanted = display.filter) {
   const rgbFrame = frameChannels() === 3;
   const rgbView = rgbFrame && display.channel === "rgb";
-  el("viewSwitch").hidden = !rgbFrame;
+  el("viewSwitch").hidden = el("cardSwitch").hidden = !rgbFrame;
   const entries = Object.entries(filters).filter(([,spec]) => rgbFrame || !spec.rgb);
-  // Single-channel filters name their channel: the selected one, or Green, which picking one from RGB switches to.
-  const channel = channelNames[rgbView ? 1 : display.channel];
-  setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title+(spec.rgb || !rgbFrame ? "" : " ("+channel+" Channel)")]));
+  setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title]));
   if (Boolean(filters[wanted].rgb) !== rgbView) {
     const previous = wanted;
     wanted = filterMemory?.to === wanted ? filterMemory.from : counterpart[wanted] ?? (rgbView ? "rgbIntensity" : "intensity");
@@ -469,7 +467,7 @@ el("filter").addEventListener("change",() => {
   const rgbFilter = Boolean(filters[el("filter").value].rgb);
   if (frameChannels() === 3 && rgbFilter !== (display.channel === "rgb")) {
     display.channel = rgbFilter ? "rgb" : 1;
-    viewSwitch.querySelector(`input[value="${display.channel}"]`).checked = true;
+    syncChannelSwitches();
   }
   changeFilter();
 });
@@ -486,11 +484,18 @@ for (const id of ["minimum","maximum"]) el(id).addEventListener("input",() => {
   draw();
 });
 
-// The channel switch on the image is a display choice, so it never re-renders.
+// The channel switches on the image and in Image Filters stay in sync. Choosing a channel is a
+// display choice, so it never re-renders.
 const viewSwitch = el("viewSwitch");
-viewSwitch.addEventListener("change",event => {
+function syncChannelSwitches() {
+  for (const group of [viewSwitch,el("cardSwitch")]) {
+    group.querySelector(`input[value="${display.channel}"]`).checked = true;
+  }
+}
+for (const group of [viewSwitch,el("cardSwitch")]) group.addEventListener("change",event => {
   hideOrbitHint();
   display.channel = event.target.value === "rgb" ? "rgb" : Number(event.target.value);
+  syncChannelSwitches();
   updateFilterOptions();
   updateLogSuggestion();
   draw();

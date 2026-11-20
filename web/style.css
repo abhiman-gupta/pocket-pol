@@ -259,15 +259,15 @@ h1, h2, h3, dl, dd, p { margin: 0; }
   font-weight: 500;
   transition: background-color .15s, color .15s;
 }
-.view-switch span.red::before, .view-switch span.green::before, .view-switch span.blue::before {
+:is(.view-switch, .channel-switch) :is(span.red, span.green, span.blue)::before {
   content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
 }
-.view-switch span.red::before { background: #e5534b; }
-.view-switch span.green::before { background: #57ab5a; }
-.view-switch span.blue::before { background: #539bf5; }
+:is(.view-switch, .channel-switch) span.red::before { background: #e5534b; }
+:is(.view-switch, .channel-switch) span.green::before { background: #57ab5a; }
+:is(.view-switch, .channel-switch) span.blue::before { background: #539bf5; }
 .view-switch label:hover span { color: #fff; }
 .view-switch input:checked + span { background: var(--paper); color: var(--ink); }
 .view-switch input:focus-visible + span { outline: 1px solid #fff; outline-offset: -3px; }
@@ -821,3 +821,7 @@ dt, .hint { color: var(--muted); }
 @media (max-width: 540px) {
   .help-window { width: calc(100vw - 24px); max-height: calc(100dvh - 48px); }
 }
+
+/* RGB | R | G | B switch inside Image Filters, mirroring the one on the image */
+.channel-switch { display: grid; width: 100%; margin-bottom: 8px; }
+.channel-switch span { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; font-family: var(--display); font-size: .75rem; font-weight: 500; }

@@ -26,8 +26,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=44">
-  <script type="module" src="./app.mjs?v=44"></script>
+  <link rel="stylesheet" href="./style.css?v=45">
+  <script type="module" src="./app.mjs?v=45"></script>
 </head>
 <body>
   <main class="window">
@@ -93,8 +93,14 @@
       </section>
 
       <section class="filter-panel card" aria-labelledby="filterTitle">
-        <div class="section-head"><h2 id="filterTitle">Display Filters</h2><button type="button" class="help-button" aria-haspopup="dialog" data-help="filterHelp" aria-label="Explain the display filters">?</button></div>
-        <label class="visually-hidden" for="filter">Display filter</label>
+        <div class="section-head"><h2 id="filterTitle">Image Filters</h2><button type="button" class="help-button" aria-haspopup="dialog" data-help="filterHelp" aria-label="Explain the image filters">?</button></div>
+        <div id="cardSwitch" class="segmented channel-switch" role="radiogroup" aria-label="Image channel">
+          <label title="RGB color"><input type="radio" name="card-view" value="rgb" checked><span>RGB</span></label>
+          <label title="Red channel"><input type="radio" name="card-view" value="0"><span class="red">R</span></label>
+          <label title="Green channel"><input type="radio" name="card-view" value="1"><span class="green">G</span></label>
+          <label title="Blue channel"><input type="radio" name="card-view" value="2"><span class="blue">B</span></label>
+        </div>
+        <label class="visually-hidden" for="filter">Image filter</label>
         <select id="filter"></select>
         <div id="analyzerControl" class="analyzer" hidden></div>
         <div id="logControl" class="log-control" hidden>
