@@ -12,11 +12,11 @@ Serve this directory from the repository root and open http://127.0.0.1:8000.
 python3 -m http.server 8000 --bind 127.0.0.1 --directory web
 ```
 
-Choose RGB or monochrome polarized channels and 128 × 128 or 256 × 256 pixels. **Fresh Estimate** replaces the current estimate. **Continue** adds the requested SPP when the scene and camera settings match. **Stop** retains the samples from the active batch. Display filters, exposure, analyzer angle, color map, range, and display zoom operate on the accumulated result. Display zoom crops the preview only.
+Choose RGB or monochrome polarized channels and 128 × 128 or 256 × 256 pixels. **Fresh Estimate** replaces the current estimate. **Continue** adds the requested SPP when the scene and camera settings match. **Stop** retains the samples from the active batch. Display filters, exposure, analyzer angle, color map, and range operate on the accumulated result. Drag or use the arrow keys to pan the preview, and press Home to center it. Display zoom also affects only the preview. Camera distance needs a fresh estimate. PNG and raw channel exports use the default camera position, with the rendered scene settings, resolution, and sample count.
 
 The browser selects hardware WebGPU automatically and shows the active renderer under **Statistics**. The CPU fallback runs in a worker. To compare on the same device, append `?backend=cpu` to the app URL.
 
-**Save Image** downloads the displayed filter as an sRGB PNG. **Save Channels** downloads a ZIP with the linear, interleaved little-endian float32 film and a JSON sidecar. The sidecar records image shape, channel names, scene settings, seed, total SPP, and sample batches.
+**Save PNG** downloads the selected display filter as an sRGB PNG. **Save channels** downloads a ZIP with the linear, interleaved little-endian float32 film and a JSON sidecar. The sidecar records image shape, channel names, scene settings, seed, total SPP, and sample batches.
 
 ## Headless rendering
 

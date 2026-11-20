@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Pol</title>
-  <link rel="stylesheet" href="./style.css?v=2">
-  <script type="module" src="./app.mjs?v=2"></script>
+  <link rel="stylesheet" href="./style.css?v=3">
+  <script type="module" src="./app.mjs?v=3"></script>
 </head>
 <body>
   <header class="app-header">
@@ -63,7 +63,7 @@
         <fieldset id="camera" class="panel-fields">
           <legend>Scene camera</legend>
           <div id="cameraSliders"></div>
-          <p class="hint">Start a fresh estimate after changing the camera sliders.</p>
+          <p class="hint">Changing camera distance needs a fresh estimate. Exports use the default camera.</p>
           <button id="reset" type="button">Reset camera</button>
         </fieldset>
       </div>
@@ -104,7 +104,7 @@
         <div id="analyzerControl" hidden></div>
       </div>
       <div class="image-panel">
-        <div id="stage" tabindex="0" aria-label="Cornell Box render. Use arrow keys to orbit.">
+        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to pan. Press Home to center.">
           <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
         </div>
         <div id="colorbar" class="colorbar" aria-label="Display colorbar" hidden>
@@ -114,11 +114,12 @@
       </div>
       <footer class="viewer-footer">
         <div class="viewport-meta">
-          <span>Drag to orbit</span>
+          <span>Drag to pan</span>
           <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
         </div>
         <fieldset id="export" disabled>
           <legend class="visually-hidden">Export</legend>
+          <p id="exportStatus" class="visually-hidden" role="status"></p>
           <div class="export-actions">
             <button id="saveImage">Save PNG</button>
             <button id="saveChannels">Save channels</button>

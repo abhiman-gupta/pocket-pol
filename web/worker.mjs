@@ -75,7 +75,41 @@ async function nextBatch() {
   }
 }
 
+async function renderExport({settings,samples,seed,forceCpu}) {
+  let gpuEstimate;
+  if (!forceCpu) {
+    try {
+      gpu ??= openGpu();
+      gpuEstimate = await (await gpu)?.newEstimate(settings,seed);
+      if (gpuEstimate) {
+        let frame;
+        while (gpuEstimate.samples < samples) {
+          const count = Math.min(32,samples-gpuEstimate.samples);
+          frame = await gpuEstimate.addSamples(count,{readFilm:gpuEstimate.samples+count===samples});
+        }
+        return frame;
+      }
+    } catch (error) {
+      postMessage({type:"fallback",message:error.message});
+    } finally {
+      gpuEstimate?.dispose();
+    }
+  }
+  const cpuEstimate = new Estimate(settings,seed);
+  cpuEstimate.addSamples(samples);
+  return cpuEstimate.frame();
+}
+
 self.onmessage = async ({data}) => {
+  if (data.type === "export") {
+    try {
+      const frame = await renderExport(data);
+      postMessage({type:"exported",frame},[frame.pixels.buffer]);
+    } catch (error) {
+      postMessage({type:"export-error",message:error.message});
+    }
+    return;
+  }
   if (data.type === "stop") {
     clearTimeout(timer);
     stopping = true;

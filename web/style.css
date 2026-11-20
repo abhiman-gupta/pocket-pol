@@ -213,16 +213,17 @@ details dl .row { margin: 3px 0; }
   overflow: hidden;
   container-type: size;
   touch-action: none;
+  cursor: grab;
+  user-select: none;
 }
+#stage.panning { cursor: grabbing; }
 canvas {
   display: block;
   width: min(100cqw,100cqh);
   height: auto;
   background: #080909;
   outline: 1px solid #414447;
-  cursor: grab;
 }
-canvas:active { cursor: grabbing; }
 .colorbar {
   flex: 0 0 77px;
   display: grid;

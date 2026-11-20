@@ -7,7 +7,7 @@ const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const worker = new Worker(new URL("./worker.mjs",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=3",import.meta.url),{type:"module"});
 const controls = {};
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
 let frame;
@@ -16,7 +16,10 @@ let running = false;
 let stopping = false;
 let requested = 0;
 let drag;
-let restartAfterStop = false;
+let panX = 0;
+let panY = 0;
+let exportRequest;
+let exportCache;
 let barMap;
 let display = displayDefaults("rgbIntensity");
 
@@ -60,13 +63,11 @@ slider("sourceControls","source_ellipticity","Source ellipticity",-1,1,.01,0,fix
 slider("displaySliders","exposure","Exposure",-8,8,.1,0,value => (value>0 ? "+" : "")+value.toFixed(1)+" EV");
 slider("analyzerControl","angle","Analyzer angle",-90,90,.1,0,degrees);
 slider("zoomControl","zoom","Display zoom",1,4,.1,1,factor(1));
-slider("cameraSliders","yaw","Yaw",-180,180,.1,0,degrees);
-slider("cameraSliders","pitch","Pitch",-80,80,.1,0,degrees);
 slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
 
 function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
-    if (id === "preset") return [id,value];
+    if (["preset","yaw","pitch"].includes(id)) return [id,value];
     const field = el(id);
     return [id,typeof value === "number" ? Number(field.value) : field.value];
   }));
@@ -75,12 +76,12 @@ function readSettings() {
 function updateButtons() {
   const dirty = JSON.stringify(readSettings()) !== loadedSettings;
   const invalid = !el("spp").validity.valid || !el("max_depth").validity.valid || !el("rr_depth").validity.valid;
-  el("fresh").disabled = running || invalid;
-  el("continue").disabled = running || !frame || dirty || invalid;
+  el("fresh").disabled = running || Boolean(exportRequest) || invalid;
+  el("continue").disabled = running || Boolean(exportRequest) || !frame || dirty || invalid;
   el("stop").disabled = !running || stopping;
-  el("scene").disabled = running;
-  el("camera").disabled = running;
-  el("export").disabled = !frame;
+  el("scene").disabled = running || Boolean(exportRequest);
+  el("camera").disabled = running || Boolean(exportRequest);
+  el("export").disabled = !frame || Boolean(exportRequest) || (running && needsDefaultCamera(frame));
   el("sceneChanges").hidden = running || !frame || !dirty;
   el("progress").classList.toggle("active",running);
 }
@@ -155,12 +156,13 @@ function draw() {
 }
 
 function begin(fresh,startup = false) {
-  if (running || drag || el(fresh ? "fresh" : "continue").disabled) return;
+  if (running || el(fresh ? "fresh" : "continue").disabled) return;
   const settings = readSettings();
   requested = el("spp").valueAsNumber;
   if (!Number.isInteger(requested) || !el("spp").validity.valid) return;
   if (fresh) {
     frame = undefined;
+    exportCache = undefined;
     loadedSettings = JSON.stringify(settings);
     el("completed").textContent = "0 SPP";
     for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
@@ -179,7 +181,6 @@ function begin(fresh,startup = false) {
 function fail(message) {
   running = false;
   stopping = false;
-  restartAfterStop = false;
   loadedSettings = undefined;
   el("status").textContent = "Render failed";
   el("error").textContent = message;
@@ -187,8 +188,13 @@ function fail(message) {
   updateButtons();
 }
 
-worker.onerror = event => fail(event.message || "Could not start the render worker.");
+worker.onerror = event => {
+  const message = event.message || "Could not start the render worker.";
+  if (exportRequest) finishExport({type:"export-error",message});
+  else fail(message);
+};
 worker.onmessage = ({data}) => {
+  if (data.type === "exported" || data.type === "export-error") {finishExport(data); return;}
   if (data.type === "target") { requested = data.samples; return; }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
@@ -200,10 +206,6 @@ worker.onmessage = ({data}) => {
     running = stopping = false;
     el("status").textContent = "Stopped · "+(frame?.samples ?? 0)+" SPP";
     updateButtons();
-    if (restartAfterStop) {
-      restartAfterStop = false;
-      begin(true);
-    }
     return;
   }
   const first = !frame;
@@ -260,7 +262,7 @@ for (const id of ["channels","size","max_depth","rr_depth","spp"]) el(id).addEve
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);
-    if (id === "zoom") canvas.style.transform = "scale("+field.value+")";
+    if (id === "zoom") setPan(panX,panY);
     else if (id === "exposure" || id === "angle") {display[id] = Number(field.value);draw();}
     else {
       if (id === "source_dop") updateSourceControls();
@@ -283,42 +285,41 @@ for (const id of ["minimum","maximum"]) el(id).addEventListener("input",() => {
   draw();
 });
 
-function orbit(yaw,pitch) {
-  updateSlider("yaw",((yaw+180)%360+360)%360-180);
-  updateSlider("pitch",clamp(pitch,-80,80));
-  updateButtons();
+function setPan(x,y) {
+  const zoom = Number(controls.zoom.field.value);
+  const limitX = Math.max(0,(stage.clientWidth+canvas.clientWidth*zoom)/2-40);
+  const limitY = Math.max(0,(stage.clientHeight+canvas.clientHeight*zoom)/2-40);
+  panX = clamp(x,-limitX,limitX);
+  panY = clamp(y,-limitY,limitY);
+  canvas.style.transform = "translate("+panX+"px,"+panY+"px) scale("+zoom+")";
 }
 stage.addEventListener("pointerdown",event => {
   if (!event.isPrimary || event.button!==0) return;
-  drag = {id:event.pointerId,x:event.clientX,y:event.clientY,yaw:Number(el("yaw").value),pitch:Number(el("pitch").value),moved:false};
+  drag = {id:event.pointerId,x:event.clientX,y:event.clientY,panX,panY};
+  stage.classList.add("panning");
   stage.setPointerCapture(event.pointerId);
 });
 stage.addEventListener("pointermove",event => {
   if (drag?.id!==event.pointerId) return;
-  const dx = event.clientX-drag.x;
-  const dy = event.clientY-drag.y;
-  if (!drag.moved && Math.hypot(dx,dy)<2) return;
-  drag.moved = true;
-  stop();
-  orbit(drag.yaw-dx*.2,drag.pitch+dy*.2);
+  setPan(drag.panX+event.clientX-drag.x,drag.panY+event.clientY-drag.y);
 });
 stage.addEventListener("lostpointercapture",() => {
-  const moved = drag?.moved;
   drag = undefined;
-  if (moved && stopping) restartAfterStop = true;
-  else if (moved) begin(true);
+  stage.classList.remove("panning");
 });
 stage.addEventListener("keydown",event => {
-  const delta = {ArrowLeft:[-3,0],ArrowRight:[3,0],ArrowUp:[0,3],ArrowDown:[0,-3]}[event.key];
-  if (!delta || running) return;
+  const delta = {ArrowLeft:[-24,0],ArrowRight:[24,0],ArrowUp:[0,-24],ArrowDown:[0,24],Home:[-panX,-panY]}[event.key];
+  if (!delta) return;
   event.preventDefault();
-  orbit(Number(el("yaw").value)+delta[0],Number(el("pitch").value)+delta[1]);
-  begin(true);
+  setPan(panX+delta[0],panY+delta[1]);
 });
+window.addEventListener("resize",() => setPan(panX,panY));
 el("reset").addEventListener("click",() => {
-  for (const [id,value] of Object.entries({yaw:0,pitch:0,distance:1,zoom:1})) updateSlider(id,value);
-  canvas.style.transform = "";
-  begin(true);
+  updateSlider("distance",defaultScene.distance);
+  updateSlider("zoom",1);
+  setPan(0,0);
+  updateButtons();
+  if (JSON.stringify(readSettings())!==loadedSettings) begin(true);
 });
 
 function download(blob,filename) {
@@ -329,16 +330,69 @@ function download(blob,filename) {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url),10000);
 }
-el("saveImage").addEventListener("click",() => {
-  canvas.toBlob(blob => {
-    if (blob) download(blob,"pocket-pol.png");
-  },"image/png");
-});
-el("saveChannels").addEventListener("click",() => {
-  const {bytes,metadata} = exportChannels(frame);
+function needsDefaultCamera(outputFrame) {
+  const {yaw,pitch,distance} = outputFrame.settings;
+  return yaw!==defaultScene.yaw || pitch!==defaultScene.pitch || distance!==defaultScene.distance;
+}
+
+function saveExport(button,outputFrame,displaySettings) {
+  if (button.id === "saveImage") {
+    const output = document.createElement("canvas");
+    output.width = output.height = outputFrame.size;
+    const pixels = displayPixels(outputFrame,displaySettings);
+    output.getContext("2d",{alpha:false}).putImageData(new ImageData(pixels,output.width,output.height),0,0);
+    output.toBlob(blob => {
+      if (blob) download(blob,"pocket-pol.png");
+    },"image/png");
+    return;
+  }
+  const {bytes,metadata} = exportChannels(outputFrame);
   const json = new TextEncoder().encode(JSON.stringify(metadata,null,2)+"\n");
   download(zipFiles([["pocket-pol.f32",bytes],["pocket-pol.f32.json",json]]),"pocket-pol-channels.zip");
-});
+}
+
+function requestExport(button) {
+  if (!frame || el("export").disabled) return;
+  const displaySettings = {...display};
+  if (!needsDefaultCamera(frame)) {
+    saveExport(button,frame,displaySettings);
+    return;
+  }
+  if (exportCache?.source === frame) {
+    saveExport(button,exportCache.frame,displaySettings);
+    return;
+  }
+  exportRequest = {source:frame,button,label:button.textContent,displaySettings};
+  button.textContent = "Preparing…";
+  el("exportStatus").textContent = "Rendering from the default camera.";
+  updateButtons();
+  const {yaw,pitch,distance} = defaultScene;
+  worker.postMessage({
+    type:"export",settings:{...frame.settings,yaw,pitch,distance},
+    samples:frame.samples,seed:frame.seed,forceCpu,
+  });
+}
+
+function finishExport(data) {
+  if (!exportRequest) return;
+  const {source,button,label,displaySettings} = exportRequest;
+  exportRequest = undefined;
+  button.textContent = label;
+  updateButtons();
+  if (data.type === "export-error") {
+    el("exportStatus").textContent = "";
+    el("error").textContent = "Export failed. "+data.message;
+    el("error").hidden = false;
+    return;
+  }
+  el("exportStatus").textContent = "Default-camera export ready.";
+  exportCache = {source,frame:data.frame};
+  saveExport(button,data.frame,displaySettings);
+}
+
+for (const id of ["saveImage","saveChannels"]) {
+  el(id).addEventListener("click",event => requestExport(event.currentTarget));
+}
 
 updateFilterOptions();
 updateSourceControls();
