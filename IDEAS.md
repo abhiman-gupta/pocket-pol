@@ -40,6 +40,9 @@ The initial scope follows Pollia's Swift window, Cornell box, and Jarecki materi
 - [x] **Toggle color channels hint.** Like the Drag to orbit overlay, an arrow points at the channel switch on load with “Toggle color channels” and fades at the first interaction.
 - [x] **Decade ticks on log colorbars.** Log scale colorbars put ticks at powers of ten (10⁻³, 10⁻², 10⁻¹, 10⁰ by default). Colorbars no longer say “Luminance”.
 - [x] **Stokes names.** Q / I, U / I, and V / I are now called Q-Stokes, U-Stokes, and V-Stokes.
+- [x] **Camera distance under the image.** The Camera tab is gone. The camera distance slider sits right under Export and Reset camera so people find it and zoom in on the polarization patterns; the tabs are now Scene and Render Settings.
+- [x] **Image Adjustments card.** Color map, Show colorbar, and Range move out of Display Filters into their own Image Adjustments card after Light Source and Display Filters, shown for filters with a colorbar. Log scale stays in Display Filters.
+- [x] **Shorter subtitle and scene title.** The page subtitle (and meta description) drops “No downloads. No command line.” and reads “A physically based polarization renderer that runs entirely in your browser.” The scene line reads “Scene: Cornell Box”.
 - [ ] **Desktop and phone support.** Verify that users can open, edit, and render a scene on both desktop and phone browsers. Tune preview quality so the controls stay responsive during rendering.
 
 - [ ] **Polarization learning tool.** Grow Pocket Pol into a tool for learning polarization, not just a renderer, building on the interactive light and analyzer controls.

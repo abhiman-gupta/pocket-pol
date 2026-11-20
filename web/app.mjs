@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=38";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=38";
-import {setupExport} from "./export.mjs?v=38";
+import {clamp,defaultScene} from "./scene.mjs?v=39";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=39";
+import {setupExport} from "./export.mjs?v=39";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=38",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=39",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -79,7 +79,7 @@ const sceneSliders = ["source_dop","source_aolp","source_ellipticity","distance"
 slider("sourceControls","source_dop","Degree of polarization",0,1,.01,0,value => Math.round(value*100)+"%");
 slider("sourceControls","source_aolp","Angle of polarization",-90,90,.1,0,degrees);
 slider("sourceControls","source_ellipticity","Ellipticity",-1,1,.01,0,fixed(2));
-slider("cameraSliders","distance","Camera distance",.25,4,.01,1,factor(2));
+slider("distanceControl","distance","Camera distance",.25,4,.01,1,factor(2));
 
 function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
