@@ -9,7 +9,6 @@ let timer;
 let inFlight = false;
 let stopping = false;
 let batchSize = 1;
-let startupCpuTarget = 0;
 
 function finishStop() {
   remaining = 0;
@@ -26,7 +25,7 @@ async function nextBatch() {
   inFlight = true;
   try {
     const started = performance.now();
-    let count = Math.min(remaining,batchSize);
+    const count = Math.min(remaining,batchSize);
     let frame;
     let backend = "CPU";
     if (estimate.backend === "WebGPU") {
@@ -48,16 +47,10 @@ async function nextBatch() {
         lastGpuFrame = undefined;
         void gpu.then(renderer => renderer?.dispose());
         gpu = Promise.resolve(null);
-        if (startupCpuTarget) {
-          const target = Math.max(estimate.samples,startupCpuTarget);
-          remaining = target-estimate.samples;
-          count = Math.min(count,remaining);
-          postMessage({type:"target",samples:target});
-        }
       }
     }
     if (!frame) {
-      if (count) estimate.addSamples(count);
+      estimate.addSamples(count);
       frame = estimate.frame();
     }
     remaining -= count;
@@ -126,30 +119,27 @@ self.onmessage = async ({data}) => {
     if (!inFlight) finishStop();
     return;
   }
-  if (data.type === "fresh") {
-    inFlight = true;
-    estimate?.dispose?.();
-    lastGpuFrame = undefined;
-    try {
-      if (!data.forceCpu) {
-        gpu ??= openGpu();
-        estimate = await (await gpu)?.newEstimate(data.settings);
-      } else {
-        estimate = undefined;
-      }
-    } catch (error) {
-      postMessage({type:"fallback",message:error.message});
-      gpu = Promise.resolve(null);
+  if (data.type !== "fresh") return;
+  inFlight = true;
+  estimate?.dispose?.();
+  lastGpuFrame = undefined;
+  try {
+    if (!data.forceCpu) {
+      gpu ??= openGpu();
+      estimate = await (await gpu)?.newEstimate(data.settings);
+    } else {
       estimate = undefined;
-    } finally {
-      inFlight = false;
     }
-    estimate ??= new Estimate(data.settings);
-    batchSize = 1;
-    if (stopping) {finishStop(); return;}
+  } catch (error) {
+    postMessage({type:"fallback",message:error.message});
+    gpu = Promise.resolve(null);
+    estimate = undefined;
+  } finally {
+    inFlight = false;
   }
-  startupCpuTarget = data.startup ? data.samples : 0;
-  remaining = startupCpuTarget && estimate.backend === "WebGPU" ? Math.max(data.samples,64) : data.samples;
-  if (remaining !== data.samples) postMessage({type:"target",samples:remaining});
+  estimate ??= new Estimate(data.settings);
+  batchSize = 1;
+  if (stopping) {finishStop(); return;}
+  remaining = data.samples;
   schedule();
 };

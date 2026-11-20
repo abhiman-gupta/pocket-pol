@@ -7,7 +7,7 @@ const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const worker = new Worker(new URL("./worker.mjs?v=4",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=5",import.meta.url),{type:"module"});
 const controls = {};
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
 let frame;
@@ -84,7 +84,6 @@ function updateButtons() {
   const cameraBusy = Boolean(drag?.moved || previewRequest || cameraRenderPending);
   const busy = running || Boolean(exportRequest) || cameraBusy;
   el("fresh").disabled = busy || invalid;
-  el("continue").disabled = busy || !frame || dirty || invalid;
   el("stop").disabled = !running || stopping;
   el("scene").disabled = busy;
   el("camera").disabled = busy;
@@ -163,28 +162,26 @@ function draw() {
   context.putImageData(new ImageData(displayPixels(image,display),image.size,image.size),0,0);
 }
 
-function begin(fresh,startup = false) {
-  if (running || el(fresh ? "fresh" : "continue").disabled) return;
+function begin() {
+  if (running || el("fresh").disabled) return;
   const settings = readSettings();
   requested = el("spp").valueAsNumber;
   if (!Number.isInteger(requested) || !el("spp").validity.valid) return;
-  if (fresh) {
-    frame = undefined;
-    previewFrame = undefined;
-    exportCache = undefined;
-    loadedSettings = JSON.stringify(settings);
-    el("completed").textContent = "0 SPP";
-    for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
-    updateFilterOptions();
-    draw();
-  }
+  frame = undefined;
+  previewFrame = undefined;
+  exportCache = undefined;
+  loadedSettings = JSON.stringify(settings);
+  el("completed").textContent = "0 SPP";
+  for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
+  updateFilterOptions();
+  draw();
   el("error").hidden = true;
   running = true;
   stopping = false;
   el("progress").value = 0;
   el("status").textContent = "Rendering…";
   updateButtons();
-  worker.postMessage({type:fresh ? "fresh" : "continue",settings,samples:requested,forceCpu,startup});
+  worker.postMessage({type:"fresh",settings,samples:requested,forceCpu});
 }
 
 function fail(message) {
@@ -215,7 +212,6 @@ worker.onmessage = ({data}) => {
     advanceCameraRender();
     return;
   }
-  if (data.type === "target") { requested = data.samples; return; }
   if (data.type === "fallback") {
     console.warn("Pocket Pol is using its CPU renderer.",data.message);
     return;
@@ -245,7 +241,7 @@ worker.onmessage = ({data}) => {
   updateButtons();
 };
 
-el("estimateForm").addEventListener("submit",event => {event.preventDefault(); begin(true);});
+el("estimateForm").addEventListener("submit",event => {event.preventDefault(); begin();});
 const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
 function selectPanel(selected) {
   for (const tab of tabs) {
@@ -269,7 +265,6 @@ for (const tab of tabs) {
     target.focus();
   });
 }
-el("continue").addEventListener("click",() => begin(false));
 function stop() {
   if (!running || stopping) return;
   stopping = true;
@@ -322,7 +317,7 @@ function advanceCameraRender() {
       previewFrame = undefined;
       el("status").textContent = "Camera changed";
       updateButtons();
-      begin(true);
+      begin();
       if (!running) draw();
       return;
     }
@@ -459,4 +454,4 @@ for (const id of ["saveImage","saveChannels"]) {
 
 updateFilterOptions();
 updateSourceControls();
-begin(true,true);
+begin();
