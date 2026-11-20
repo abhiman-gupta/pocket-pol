@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=41";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=41";
-import {setupExport} from "./export.mjs?v=41";
+import {clamp,defaultScene} from "./scene.mjs?v=42";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=42";
+import {setupExport} from "./export.mjs?v=42";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=41",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=42",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -113,27 +113,19 @@ function setStatus(text) {
   el("status").textContent = text;
 }
 
-// The (?) buttons open short explanations under the card heading. Escape or a click elsewhere closes them.
-const helpButtons = Array.from(document.querySelectorAll(".help-button"));
-function setHelp(button,open) {
-  button.setAttribute("aria-expanded",String(open));
-  el(button.getAttribute("aria-controls")).hidden = !open;
-}
-for (const button of helpButtons) {
+// The (?) buttons open a dialog with short explanations; it scrolls on its own on small screens.
+const helpDialog = el("helpDialog");
+const helpTitles = {lightHelp:"Light Source",filterHelp:"Display Filters"};
+for (const button of document.querySelectorAll(".help-button")) {
   button.addEventListener("click",() => {
-    const open = button.getAttribute("aria-expanded") !== "true";
-    for (const other of helpButtons) setHelp(other,other===button && open);
+    for (const id of Object.keys(helpTitles)) el(id).hidden = id !== button.dataset.help;
+    el("helpTitle").textContent = helpTitles[button.dataset.help];
+    helpDialog.showModal();
+    helpDialog.querySelector(".help-body").scrollTop = 0;
   });
 }
-document.addEventListener("click",event => {
-  if (event.target.closest(".help-button, .help-panel")) return;
-  for (const button of helpButtons) setHelp(button,false);
-});
-document.addEventListener("keydown",event => {
-  if (event.key !== "Escape") return;
-  const open = helpButtons.find(button => button.getAttribute("aria-expanded") === "true");
-  if (open) {setHelp(open,false); open.focus();}
-});
+el("helpClose").addEventListener("click",() => helpDialog.close());
+helpDialog.addEventListener("click",event => {if (event.target === helpDialog) helpDialog.close();});
 el("filterHelp").replaceChildren(...Object.values(filters).flatMap(spec => [
   Object.assign(document.createElement("dt"),{textContent:spec.title}),
   Object.assign(document.createElement("dd"),{textContent:spec.hint}),
