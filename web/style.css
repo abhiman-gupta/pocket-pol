@@ -46,14 +46,14 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 /* Page */
 .window {
   display: grid;
-  grid-template-columns: minmax(0, clamp(300px, calc(100dvh - var(--chrome, 300px)), 860px)) clamp(340px, 30vw, 440px);
+  grid-template-columns: minmax(0, clamp(300px, calc(100dvh - var(--chrome, 280px)), 860px)) clamp(340px, 30vw, 440px);
   grid-template-areas: "header header" "viewer sidebar";
   justify-content: center;
   align-items: start;
   gap: clamp(20px, 2.6vw, 36px) clamp(20px, 2.6vw, 40px);
   max-width: 1720px;
   margin-inline: auto;
-  padding: clamp(20px, 3vw, 44px) var(--gutter) 12px;
+  padding: clamp(12px, 1.6vw, 24px) var(--gutter) 12px;
 }
 .page-header { grid-area: header; text-align: center; }
 .page-title {
