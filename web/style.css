@@ -776,8 +776,11 @@ dt, .hint { color: var(--muted); }
 /* Small images: the channel hint drops under the switch and points up at it. */
 #stage { container: stage / inline-size; }
 @container stage (max-width: 420px) {
-  .view-corner { flex-direction: column-reverse; align-items: flex-end; gap: 2px; }
-  .channel-hint svg { transform: rotate(-90deg); animation: none; }
+  /* Wrap the label onto two lines so it stays beside the switch and clears the ceiling light. */
+  .channel-hint { gap: 2px; }
+  .view-corner { inset-block-start: 8px; inset-inline-end: 8px; }
+  .channel-hint span { max-width: 9.4em; padding: 2px 6px; font-size: .6875rem; line-height: 1.15; text-align: right; white-space: normal; }
+  .channel-hint svg { width: 18px; height: 18px; }
 }
 
 /* (?) help buttons and their explanation panels */

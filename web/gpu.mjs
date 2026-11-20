@@ -1,7 +1,7 @@
-import {makeScene} from "./scene.mjs?v=42";
+import {makeScene} from "./scene.mjs?v=43";
 
 async function browserShader() {
-  const response = await fetch(new URL("./trace.wgsl?v=42",import.meta.url));
+  const response = await fetch(new URL("./trace.wgsl?v=43",import.meta.url));
   if (!response.ok) throw new Error("Could not load the WebGPU shader");
   return response.text();
 }

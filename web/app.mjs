@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=42";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=42";
-import {setupExport} from "./export.mjs?v=42";
+import {clamp,defaultScene} from "./scene.mjs?v=43";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=43";
+import {setupExport} from "./export.mjs?v=43";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=42",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=43",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -147,7 +147,9 @@ function updateFilterOptions(wanted = display.filter) {
   const rgbView = rgbFrame && display.channel === "rgb";
   el("viewSwitch").hidden = !rgbFrame;
   const entries = Object.entries(filters).filter(([,spec]) => rgbFrame || !spec.rgb);
-  setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title]));
+  // Single-channel filters name their channel: the selected one, or Green, which picking one from RGB switches to.
+  const channel = channelNames[rgbView ? 1 : display.channel];
+  setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title+(spec.rgb || !rgbFrame ? "" : " ("+channel+" Channel)")]));
   if (Boolean(filters[wanted].rgb) !== rgbView) {
     const previous = wanted;
     wanted = filterMemory?.to === wanted ? filterMemory.from : counterpart[wanted] ?? (rgbView ? "rgbIntensity" : "intensity");
@@ -251,7 +253,7 @@ function draw() {
   el("colorbar").classList.toggle("off",!showBar);
   el("colorbar").setAttribute("aria-hidden",String(!showBar));
   if (showBar) {
-    el("barTitle").textContent = spec.title+(image.channels===3 && display.channel!=="rgb" ? " · "+channelNames[display.channel] : "");
+    el("barTitle").textContent = spec.title+(image.channels===3 && display.channel!=="rgb" ? " ("+channelNames[display.channel]+" Channel)" : "");
     el("barTicks").replaceChildren(...colorbarTicks(spec).map(([position,label]) => {
       const tick = document.createElement("output");
       tick.style.setProperty("--at",position*100+"%");
