@@ -8,24 +8,30 @@
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><h1>Pocket Pol</h1></div>
+    <a class="credits" href="./credits.html">Credits and licenses</a>
+  </header>
   <main class="window">
     <aside class="sidebar" aria-label="Render controls">
       <fieldset id="scene">
         <legend>Scene</legend>
-        <strong>Cornell Box</strong>
         <label class="row">Channels
           <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
         </label>
         <label class="row">Image size
           <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
         </label>
-        <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
-        <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
-        <div id="sourceControls"></div>
+        <details>
+          <summary>Lighting and path settings</summary>
+          <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
+          <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
+          <div id="sourceControls"></div>
+        </details>
       </fieldset>
 
       <fieldset id="statistics">
-        <legend>Statistics</legend>
+        <legend>Estimate</legend>
         <form id="estimateForm">
           <label class="row">Samples per estimate <input id="spp" type="number" min="1" max="4096" required value="8"></label>
           <div class="actions">
@@ -34,13 +40,16 @@
             <button id="stop" type="button" disabled>Stop</button>
           </div>
         </form>
-        <dl>
-          <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
-          <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
-          <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
-          <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
-          <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
-        </dl>
+        <details>
+          <summary>Render statistics</summary>
+          <dl>
+            <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
+            <div class="row"><dt>Renderer</dt><dd id="backend">—</dd></div>
+            <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
+            <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
+            <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
+          </dl>
+        </details>
       </fieldset>
 
       <fieldset>
@@ -67,9 +76,12 @@
 
       <fieldset id="camera">
         <legend>Camera</legend>
-        <p class="hint">Drag the image to orbit. Start a fresh estimate after editing camera settings.</p>
-        <div id="cameraSliders"></div>
         <button id="reset" type="button">Reset Camera</button>
+        <details>
+          <summary>Orbit and distance</summary>
+          <div id="cameraSliders"></div>
+          <p class="hint">Start a fresh estimate after editing camera settings.</p>
+        </details>
       </fieldset>
 
       <fieldset id="export" disabled>
@@ -80,13 +92,11 @@
         </div>
       </fieldset>
       <p id="error" class="error" role="alert" hidden></p>
-      <a class="credits" href="./credits.html">Mitsuba 3, Pollia, and other credits</a>
     </aside>
 
     <section class="viewer" aria-label="Render viewport">
       <header class="viewer-header">
-        <strong>Pocket Pol</strong>
-        <span id="imageTitle">Cornell Box</span>
+        <h2 id="imageTitle">Cornell Box</h2>
         <span id="status" role="status" aria-live="polite">Ready</span>
       </header>
       <div class="image-panel">
@@ -98,7 +108,10 @@
           <div id="barGradient"></div><output id="barMinimum"></output>
         </div>
       </div>
-      <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
+      <footer class="viewer-footer">
+        <span>Drag to orbit</span>
+        <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
+      </footer>
     </section>
   </main>
 </body>
