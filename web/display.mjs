@@ -1,11 +1,11 @@
-import {palettes} from "./palettes.mjs?v=30";
-import {clamp} from "./scene.mjs?v=30";
+import {palettes} from "./palettes.mjs?v=31";
+import {clamp} from "./scene.mjs?v=31";
 
 export const filters = {
   rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true},
-  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light passed by a linear polarizer. Turn the wheel to set its angle."},
+  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light passed by a linear polarizer at the angle below."},
   intensity:{title:"Intensity",exposure:true,log:true,hint:"Total light reaching the camera in the selected channel."},
-  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light passed by a linear polarizer. Turn the wheel to set its angle."},
+  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light passed by a linear polarizer at the angle below."},
   dop:{title:"Degree of Polarization",log:true,hint:"The fraction of the light that is polarized."},
   aolp:{title:"AoLP [°]",range:[-90,90],map:"phase",hint:"The angle of linear polarization, measured in degrees."},
   ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis",hint:"How close the polarization is to linear or circular."},

@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=30">
-  <script type="module" src="./app.mjs?v=30"></script>
+  <link rel="stylesheet" href="./style.css?v=31">
+  <script type="module" src="./app.mjs?v=31"></script>
 </head>
 <body>
   <main class="window">
@@ -68,25 +68,7 @@
         <label class="visually-hidden" for="filter">Polarization view</label>
         <select id="filter" aria-describedby="viewHint"></select>
         <p id="viewHint" class="view-hint" hidden></p>
-        <div id="analyzerControl" class="analyzer" hidden>
-          <div class="analyzer-head"><h3 id="analyzerLabel">Analyzer</h3><output id="analyzerValue">0°</output></div>
-          <div class="wheel-wrap">
-            <svg id="wheel" viewBox="-110 -110 220 220" role="slider" tabindex="0" aria-labelledby="analyzerLabel"
-              aria-valuemin="0" aria-valuemax="180" aria-valuenow="0" aria-valuetext="Linear 0°">
-              <circle class="rim" r="104"/>
-              <g id="wheelTicks"></g>
-              <circle class="face" r="78"/>
-              <line class="grid-line" x1="-78" y1="0" x2="78" y2="0"/>
-              <line class="grid-line" x1="0" y1="-78" x2="0" y2="78"/>
-              <g id="wheelLinear" class="rotor">
-                <line class="axis" x1="-70" y1="0" x2="70" y2="0"/>
-                <circle class="knob" cx="70" cy="0" r="7"/>
-                <circle class="knob" cx="-70" cy="0" r="7"/>
-              </g>
-              <circle class="hub" r="4"/>
-            </svg>
-          </div>
-        </div>
+        <div id="analyzerControl" class="analyzer" hidden></div>
       </section>
       </div>
 

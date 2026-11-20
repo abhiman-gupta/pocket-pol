@@ -66,7 +66,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Dedicated Light Source section first.** The control panel opens with a Light Source card above Filter. Its dropdown offers Unpolarized or Polarized, and choosing Polarized reveals degree of polarization, angle of polarization, and ellipticity, starting at 100% DoP. The light intensity slider has been removed for now; renders use the default intensity. On phones the colorbar sits horizontally under the image so the render stays full width.
 
-- [x] **Analyzer wheel like PolRay.** In the Filter section, the Analyzer and RGB Analyzer views show a circular wheel whose axis you drag to set the linear polarizer angle, snapping to 0°, 45°, 90°, and 135°. The analyzer is linear only, set with the wheel alone; the 0°/45°/90°/135°/RCP/LCP preset buttons were removed. Compare against PolRay's actual wheel and adjust if it differs.
+- [x] **Analyzer angle slider.** In the Filter section, the Analyzer and RGB Analyzer views show an Analyzer angle slider from 0° to 180° in 1° steps, styled like the light source sliders, and the image updates live as it moves. It replaced the PolRay-style analyzer wheel to save space. The analyzer is linear only; the 0°/45°/90°/135°/RCP/LCP preset buttons were removed earlier.
 
 - [x] **Creator credit under the subtitle.** Below “No downloads. No command line.”, show “Created by Abhiman Gupta” with the underlined name linking to the abhimangupta.com homepage.
 

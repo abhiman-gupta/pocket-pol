@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=30";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=30";
+import {clamp,defaultScene} from "./scene.mjs?v=31";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=31";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
 const estimateAction = el("estimateAction");
-const worker = new Worker(new URL("./worker.mjs?v=30",import.meta.url),{type:"module"});
+const worker = new Worker(new URL("./worker.mjs?v=31",import.meta.url),{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
 const forceCpu = new URLSearchParams(location.search).get("backend")==="cpu";
@@ -483,68 +483,14 @@ el("reset").addEventListener("click",() => {
   if (JSON.stringify(readSettings())!==loadedSettings) renderCamera();
 });
 
-// Analyzer wheel: a rotatable linear polarizer.
-const wheel = el("wheel");
-const SVG = "http://www.w3.org/2000/svg";
-for (let a=0; a<360; a+=15) {
-  const major = a%45 === 0;
-  const r = a*Math.PI/180, c = Math.cos(r), s = -Math.sin(r);
-  const tick = document.createElementNS(SVG,"line");
-  tick.setAttribute("class","tick"+(major ? " major" : ""));
-  const outer = major ? 86 : 83;
-  for (const [k,v] of Object.entries({x1:c*78,y1:s*78,x2:c*outer,y2:s*outer})) tick.setAttribute(k,v);
-  el("wheelTicks").append(tick);
-  if (major && a<180) {
-    const label = document.createElementNS(SVG,"text");
-    label.setAttribute("class","label");
-    label.setAttribute("x",c*96);
-    label.setAttribute("y",s*96);
-    label.textContent = a+"°";
-    el("wheelTicks").append(label);
-  }
-}
-const wrapAngle = a => ((a+90)%180+180)%180-90;
-function setAnalyzer(angle = display.angle) {
-  display.angle = Math.round(wrapAngle(angle)*10)/10;
-  el("wheelLinear").style.transform = "rotate("+(-display.angle)+"deg)";
-  // Show linear angles on the 0–180° scale used by the presets.
-  const shown = display.angle<0 ? display.angle+180 : display.angle;
-  const text = shown.toFixed(Number.isInteger(shown) ? 0 : 1)+"°";
-  el("analyzerValue").value = text;
-  // Report the same 0–180° scale to assistive technology.
-  wheel.setAttribute("aria-valuenow",String(shown));
-  wheel.setAttribute("aria-valuetext","Linear "+text);
+// Analyzer: a linear polarizer angle on the same 0–180° scale as before.
+slider("analyzerControl","analyzer","Analyzer angle",0,180,1,0,value => value+"°");
+function setAnalyzer() {
+  display.angle = Number(controls.analyzer.field.value);
+  updateSlider("analyzer");
   draw();
 }
-function wheelAngle(event) {
-  const box = wheel.getBoundingClientRect();
-  const x = event.clientX-(box.left+box.width/2);
-  const y = event.clientY-(box.top+box.height/2);
-  let angle = wrapAngle(Math.atan2(-y,x)*180/Math.PI);
-  const snap = Math.round(angle/45)*45;
-  if (Math.abs(angle-snap)<3) angle = snap;
-  return angle;
-}
-let turning;
-wheel.addEventListener("pointerdown",event => {
-  if (!event.isPrimary || event.button!==0) return;
-  turning = event.pointerId;
-  wheel.setPointerCapture(event.pointerId);
-  wheel.classList.add("turning");
-  setAnalyzer(wheelAngle(event));
-});
-wheel.addEventListener("pointermove",event => {
-  if (turning === event.pointerId) setAnalyzer(wheelAngle(event));
-});
-wheel.addEventListener("lostpointercapture",() => {turning = undefined; wheel.classList.remove("turning");});
-wheel.addEventListener("keydown",event => {
-  const step = event.shiftKey ? 15 : 1;
-  // Right and Up increase the angle, like other sliders.
-  const next = {ArrowRight:display.angle+step,ArrowUp:display.angle+step,ArrowLeft:display.angle-step,ArrowDown:display.angle-step,Home:0}[event.key];
-  if (next === undefined) return;
-  event.preventDefault();
-  setAnalyzer(next);
-});
+controls.analyzer.field.addEventListener("input",setAnalyzer);
 // Append ?stats to the URL to show the renderer and timing, e.g. when testing on a phone.
 if (new URLSearchParams(location.search).has("stats")) {
   const stats = el("statistics").querySelector("details");
