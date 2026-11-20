@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=34">
-  <script type="module" src="./app.mjs?v=34"></script>
+  <link rel="stylesheet" href="./style.css?v=35">
+  <script type="module" src="./app.mjs?v=35"></script>
 </head>
 <body>
   <main class="window">
@@ -24,9 +24,22 @@
 
     <section class="viewer" aria-label="Render viewport">
       <div class="figure">
-        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag to orbit the camera.">
+        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use the arrow keys to orbit the camera.">
           <canvas id="image" width="512" height="512" aria-label="Rendered Cornell Box"></canvas>
           <div id="stageMessage" class="stage-message" aria-hidden="true"><span class="spinner"></span><span id="stageMessageText">Starting renderer…</span></div>
+          <div id="orbitHint" class="orbit-overlay" aria-hidden="true">
+            <svg class="orbit-arrow up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>
+            <svg class="orbit-arrow left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+            <span class="orbit-label">Drag to orbit</span>
+            <svg class="orbit-arrow right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            <svg class="orbit-arrow down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div id="viewSwitch" class="view-switch" role="radiogroup" aria-label="Image channel">
+            <label title="RGB color"><input type="radio" name="view" value="rgb" checked><span>RGB</span></label>
+            <label title="Red channel"><input type="radio" name="view" value="0"><span class="red">R</span></label>
+            <label title="Green channel"><input type="radio" name="view" value="1"><span class="green">G</span></label>
+            <label title="Blue channel"><input type="radio" name="view" value="2"><span class="blue">B</span></label>
+          </div>
           <progress id="progress" aria-label="Render progress" max="1" value="0"></progress>
         </div>
         <div id="colorbar" class="colorbar off" role="group" aria-labelledby="barTitle">
@@ -38,11 +51,11 @@
         </div>
       </div>
       <footer class="viewer-footer">
-        <button id="rerender" type="button" title="Render again with the current settings">
-          <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M15.5 10a5.5 5.5 0 1 1-1.6-3.9M15.5 3.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Re-render
+        <button id="exportOpen" type="button" aria-haspopup="dialog">
+          <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M10 3.5v9M6 8.5l4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Export
+          <span id="exportBadge" class="export-badge" hidden></span>
         </button>
-        <span class="orbit-hint">Drag to orbit</span>
         <span id="status" class="visually-hidden" role="status" aria-live="polite">Ready</span>
         <button id="reset" type="button" disabled>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M4.5 10a5.5 5.5 0 1 0 1.6-3.9M4.5 3.5v3h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -69,24 +82,24 @@
         <select id="filter" aria-describedby="viewHint"></select>
         <p id="viewHint" class="view-hint" hidden></p>
         <div id="analyzerControl" class="analyzer" hidden></div>
+        <div id="logControl" class="log-control" hidden>
+          <label class="row toggle">Log scale <input id="log" type="checkbox" role="switch"></label>
+          <p id="logSuggestion" class="log-suggestion" hidden></p>
+        </div>
       </section>
       </div>
 
       <fieldset id="statistics" class="estimate-panel card">
         <legend class="visually-hidden">Render</legend>
-        <div class="section-head"><h2>Render</h2></div>
-        <p id="sceneChanges" class="pending-changes" role="status" hidden>Scene settings changed. Start a fresh render to apply them.</p>
+        <div class="section-head"><h2>Render</h2><span class="render-state"><span id="renderState" class="render-text"></span><button id="stopRender" type="button" class="link-button" hidden>Stop</button></span></div>
         <form id="estimateForm" novalidate>
-          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="64" inputmode="numeric"></label>
+          <label class="row">Samples per pixel <input id="spp" type="number" min="1" max="4096" required value="64" inputmode="numeric" enterkeyhint="go"></label>
           <div class="spp-presets" role="group" aria-label="Sample presets">
             <button type="button" data-spp="64">64</button>
             <button type="button" data-spp="256">256</button>
             <button type="button" data-spp="1024">1024</button>
           </div>
           <p id="sppError" class="hint error" hidden>Enter a whole number from 1 to 4096.</p>
-          <div class="estimate-actions">
-            <button id="estimateAction" class="primary" type="submit">Fresh render</button>
-          </div>
         </form>
         <details hidden>
           <summary>Render statistics</summary>
@@ -115,32 +128,24 @@
               <select id="preset"><option value="cornell">Cornell Box</option></select>
             </label>
             <div class="row">
-              <span id="channelsLabel">Channels</span>
-              <div class="segmented" role="radiogroup" aria-labelledby="channelsLabel" data-target="channels">
-                <label title="RGB polarized"><input type="radio" name="channels-choice" value="rgb" checked><span>RGB</span></label>
-                <label title="Monochrome polarized"><input type="radio" name="channels-choice" value="mono"><span>Mono</span></label>
+              <span id="depthLabel">Max depth</span>
+              <div class="stepper" role="group" aria-labelledby="depthLabel">
+                <button id="depthDown" type="button" aria-label="Decrease max depth">−</button>
+                <output id="depthValue" aria-live="polite">4</output>
+                <button id="depthUp" type="button" aria-label="Increase max depth">+</button>
               </div>
-              <input type="hidden" id="channels" value="rgb">
+              <input type="hidden" id="max_depth" value="4">
             </div>
-            <input type="hidden" id="size" value="512">
-            <details>
-              <summary>Advanced path settings</summary>
-              <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4" inputmode="numeric"></label>
-            </details>
           </fieldset>
         </div>
         <div class="settings-panel" id="display-panel" role="tabpanel" aria-labelledby="display-tab" hidden>
           <fieldset class="panel-fields">
             <legend><span>Image adjustments</span><span class="tag live">Live</span></legend>
-            <label class="row" id="channelRow">Display channel
-              <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
-            </label>
             <p id="ellipticityHelp" class="hint" hidden>−1: left circular · 0: linear · +1: right circular</p>
             <div id="displaySliders"></div>
             <div id="scalarControls" hidden>
               <label class="row">Color map <select id="map"></select></label>
               <label class="row toggle">Show colorbar <input id="showColorbar" type="checkbox" role="switch" checked></label>
-              <label class="row toggle">Log scale <input id="log" type="checkbox" role="switch"></label>
               <div class="row range">
                 <span>Range</span>
                 <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
@@ -149,20 +154,54 @@
               </div>
               <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
             </div>
-            <div id="zoomControl"></div>
           </fieldset>
         </div>
         <div class="settings-panel" id="camera-panel" role="tabpanel" aria-labelledby="camera-tab" hidden>
           <fieldset id="camera" class="panel-fields">
-            <legend><span>Scene camera</span><span class="tag">Fresh render</span></legend>
+            <legend><span>Scene camera</span></legend>
             <div id="cameraSliders"></div>
-            <p class="hint">Drag the image to orbit.</p>
+            <p class="hint">Drag the image or use the arrow keys to orbit.</p>
           </fieldset>
         </div>
       </div>
 
     </aside>
   </main>
+  <dialog id="exportDialog" class="export-window" aria-labelledby="exportTitle">
+    <div class="window-bar">
+      <h2 id="exportTitle">Export render</h2>
+      <button id="exportClose" type="button" class="window-close" aria-label="Close export window">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="export-body">
+      <div class="export-preview">
+        <canvas id="exportCanvas" width="512" height="512" aria-label="Export render preview"></canvas>
+        <span id="exportEmpty" class="export-empty">The high-quality render appears here.</span>
+        <progress id="exportProgress" max="1" value="0" aria-label="Export progress"></progress>
+      </div>
+      <div class="export-settings">
+        <p class="hint">Renders the current scene, light, and camera again at 512 × 512 with more samples per pixel, in the background. You can close this window and keep exploring while it runs.</p>
+        <dl id="exportSummary" class="export-summary"></dl>
+        <label class="row">Samples per pixel <input id="exportSpp" type="number" min="1" max="65536" required value="4096" inputmode="numeric"></label>
+        <div class="spp-presets" role="group" aria-label="Export sample presets">
+          <button type="button" data-export-spp="1024">1024</button>
+          <button type="button" data-export-spp="4096">4096</button>
+          <button type="button" data-export-spp="16384">16384</button>
+        </div>
+        <p id="exportEstimate" class="hint"></p>
+        <p id="exportStatus" class="export-status" role="status" aria-live="polite"></p>
+        <div class="export-actions">
+          <button id="exportStart" type="button" class="primary">Start export render</button>
+        </div>
+        <div id="exportDownloads" class="export-downloads" hidden>
+          <button id="downloadPng" type="button">Download PNG</button>
+          <button id="downloadStokes" type="button">Download Stokes data (.zip)</button>
+          <p class="hint">The PNG uses the filter, channel, and display settings you have selected. The zip holds float32 Stokes channels and JSON metadata.</p>
+        </div>
+      </div>
+    </div>
+  </dialog>
   <footer class="page-footer">
     <a href="./credits.html">Further credits and licenses</a>
   </footer>

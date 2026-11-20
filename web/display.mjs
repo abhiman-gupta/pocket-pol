@@ -1,5 +1,5 @@
-import {palettes} from "./palettes.mjs?v=34";
-import {clamp} from "./scene.mjs?v=34";
+import {palettes} from "./palettes.mjs?v=35";
+import {clamp} from "./scene.mjs?v=35";
 
 export const filters = {
   rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true},
@@ -13,6 +13,8 @@ export const filters = {
   u:{title:"U / I",range:[-1,1],map:"diverging",hint:"+45° versus −45° linear polarization, divided by intensity."},
   v:{title:"V / I",range:[-1,1],map:"diverging",hint:"Right versus left circular polarization, divided by intensity."},
 };
+export const luminanceWeights = [.212671,.715160,.072169];
+export const channelNames = {rgb:"Luminance",0:"Red",1:"Green",2:"Blue"};
 export const maps = ["turbo","viridis","phase","diverging","grayscale","seismic"];
 
 export function displayDefaults(filter) {
@@ -57,6 +59,10 @@ export function displayPixels(frame,display) {
   const span = maximum-minimum;
   const floor = span*1e-3;
   const result = new Uint8ClampedArray(size*size*4);
+  // The RGB view combines the channels' Stokes parameters with luminance weights for scalar filters.
+  const luminance = channel === "rgb" && channels === 3;
+  const index = luminance ? 0 : Math.min(Number(channel) || 0,channels-1);
+  const combined = new Float64Array(4);
   for (let pixel=0; pixel<size*size; pixel++) {
     const output = pixel*4;
     result[output+3] = 255;
@@ -68,7 +74,13 @@ export function displayPixels(frame,display) {
       }
       continue;
     }
-    const value = scalar(pixels,base+Math.min(channel,channels-1)*4,filter,cosine,sine)*gain;
+    let value;
+    if (luminance) {
+      for (let s=0; s<4; s++) combined[s] = luminanceWeights[0]*pixels[base+s]+luminanceWeights[1]*pixels[base+4+s]+luminanceWeights[2]*pixels[base+8+s];
+      value = scalar(combined,0,filter,cosine,sine)*gain;
+    } else {
+      value = scalar(pixels,base+index*4,filter,cosine,sine)*gain;
+    }
     if (!Number.isFinite(value)) continue;
     let position = (value-minimum)/span;
     if (log && spec.log) {
@@ -76,10 +88,10 @@ export function displayPixels(frame,display) {
         ? Math.log(Math.max(value,minimum)/minimum)/Math.log(maximum/minimum)
         : Math.log(Math.max(value-minimum,floor)/floor)/Math.log(span/floor);
     }
-    const index = clamp(position,0,1)*(palette.length-1);
-    const lower = Math.floor(index);
+    const entry = clamp(position,0,1)*(palette.length-1);
+    const lower = Math.floor(entry);
     const upper = Math.min(lower+1,palette.length-1);
-    for (let c=0; c<3; c++) result[output+c] = 255*(palette[lower][c]+(index-lower)*(palette[upper][c]-palette[lower][c]));
+    for (let c=0; c<3; c++) result[output+c] = 255*(palette[lower][c]+(entry-lower)*(palette[upper][c]-palette[lower][c]));
   }
   return result;
 }
