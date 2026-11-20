@@ -1,11 +1,11 @@
 import {parseArgs} from "node:util";
 import {writeFile} from "node:fs/promises";
 import {deflateSync} from "node:zlib";
-import {defaultScene} from "./scene.mjs?v=49";
-import {exportChannels} from "./renderer.mjs?v=49";
-import {defaultWorkers,renderHeadless,renderHeadlessGpu} from "./headless.mjs?v=49";
-import {displayDefaults,displayPixels,filters} from "./display.mjs?v=49";
-import {crc32} from "./files.mjs?v=49";
+import {defaultScene} from "./scene.mjs?v=51";
+import {exportChannels} from "./renderer.mjs?v=51";
+import {defaultWorkers,renderHeadless,renderHeadlessGpu} from "./headless.mjs?v=51";
+import {displayDefaults,displayPixels,filters} from "./display.mjs?v=51";
+import {crc32} from "./files.mjs?v=51";
 
 const usage = `Usage: node render.mjs --scene cornell --spp 256 --out cornell
 Options:
