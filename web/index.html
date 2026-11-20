@@ -4,71 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Pol</title>
-  <link rel="stylesheet" href="./style.css?v=4">
+  <link rel="stylesheet" href="./style.css?v=5">
   <script type="module" src="./app.mjs?v=5"></script>
 </head>
 <body>
   <header class="app-header">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span><h1>Pocket Pol</h1></div>
+    <span class="app-description">Polarized light renderer</span>
     <a class="credits" href="./credits.html">Credits and licenses</a>
   </header>
   <main class="window">
-    <aside class="sidebar" aria-label="Render controls">
-      <div class="panel-switch" role="tablist" aria-label="Renderer settings">
-        <button id="scene-tab" type="button" role="tab" aria-selected="true" aria-controls="scene-panel">Scene</button>
-        <button id="display-tab" type="button" role="tab" aria-selected="false" aria-controls="display-panel" tabindex="-1">Display</button>
-        <button id="camera-tab" type="button" role="tab" aria-selected="false" aria-controls="camera-panel" tabindex="-1">Camera</button>
+    <section class="viewer" aria-label="Render viewport">
+      <header class="viewer-header">
+        <h2 id="imageTitle">Cornell Box</h2>
+        <label class="view-mode"><span class="visually-hidden">Polarization view</span><select id="filter" aria-describedby="viewHint"></select></label>
+      </header>
+      <p id="viewHint" class="view-hint"></p>
+      <div id="analyzerControl" hidden></div>
+      <div class="image-panel">
+        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
+          <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
+        </div>
+        <div id="colorbar" class="colorbar" aria-label="Display colorbar" hidden>
+          <span id="barTitle" class="visually-hidden"></span><output id="barMaximum"></output>
+          <div id="barGradient"></div><output id="barMinimum"></output>
+        </div>
       </div>
-      <div class="settings-panel" id="scene-panel" role="tabpanel" aria-labelledby="scene-tab">
-        <fieldset id="scene" class="panel-fields">
-          <legend>Cornell box setup</legend>
-          <label class="row">Channels
-            <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
-          </label>
-          <label class="row">Image size
-            <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
-          </label>
-          <div id="sourceControls"></div>
-          <details>
-            <summary>Advanced lighting and path settings</summary>
-            <div id="advancedSourceControls"></div>
-            <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
-            <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
-          </details>
-        </fieldset>
-      </div>
-      <div class="settings-panel" id="display-panel" role="tabpanel" aria-labelledby="display-tab" hidden>
-        <fieldset class="panel-fields">
-          <legend>Image adjustments</legend>
-          <label class="row" id="channelRow">Display channel
-            <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
-          </label>
-          <p id="ellipticityHelp" class="hint" hidden>−1: left circular · 0: linear · +1: right circular</p>
-          <div id="displaySliders"></div>
-          <div id="scalarControls" hidden>
-            <label class="row">Color map <select id="map"></select></label>
-            <label class="row">Show colorbar <input id="showColorbar" type="checkbox" checked></label>
-            <label class="row">Log scale <input id="log" type="checkbox"></label>
-            <div class="row range">
-              <span>Range</span>
-              <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
-              <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
-            </div>
-            <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
+      <footer class="viewer-footer">
+        <div class="viewport-meta">
+          <span id="status" role="status" aria-live="polite">Ready</span>
+          <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
+          <span class="orbit-hint">Drag to orbit</span>
+        </div>
+        <fieldset id="export" disabled>
+          <legend class="visually-hidden">Export</legend>
+          <p id="exportStatus" class="visually-hidden" role="status"></p>
+          <div class="export-actions">
+            <button id="saveImage">Save PNG</button>
+            <button id="saveChannels">Save channels</button>
           </div>
-          <div id="zoomControl"></div>
         </fieldset>
-      </div>
-      <div class="settings-panel" id="camera-panel" role="tabpanel" aria-labelledby="camera-tab" hidden>
-        <fieldset id="camera" class="panel-fields">
-          <legend>Scene camera</legend>
-          <div id="cameraSliders"></div>
-          <p class="hint">Drag the viewport to orbit. Changing camera distance needs a fresh estimate. Exports use the default camera.</p>
-          <button id="reset" type="button">Reset camera</button>
-        </fieldset>
+      </footer>
+    </section>
+    <aside class="sidebar" aria-label="Render controls">
+      <div class="inspector">
+        <div class="panel-switch" role="tablist" aria-label="Renderer settings">
+          <button id="scene-tab" type="button" role="tab" aria-selected="true" aria-controls="scene-panel">Scene</button>
+          <button id="display-tab" type="button" role="tab" aria-selected="false" aria-controls="display-panel" tabindex="-1">Display</button>
+          <button id="camera-tab" type="button" role="tab" aria-selected="false" aria-controls="camera-panel" tabindex="-1">Camera</button>
+        </div>
+        <div class="settings-panel" id="scene-panel" role="tabpanel" aria-labelledby="scene-tab">
+          <fieldset id="scene" class="panel-fields">
+            <legend>Cornell box setup</legend>
+            <label class="row">Channels
+              <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
+            </label>
+            <label class="row">Image size
+              <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
+            </label>
+            <div id="sourceControls"></div>
+            <details>
+              <summary>Advanced lighting and path settings</summary>
+              <div id="advancedSourceControls"></div>
+              <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
+              <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
+            </details>
+          </fieldset>
+        </div>
+        <div class="settings-panel" id="display-panel" role="tabpanel" aria-labelledby="display-tab" hidden>
+          <fieldset class="panel-fields">
+            <legend>Image adjustments</legend>
+            <label class="row" id="channelRow">Display channel
+              <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
+            </label>
+            <p id="ellipticityHelp" class="hint" hidden>−1: left circular · 0: linear · +1: right circular</p>
+            <div id="displaySliders"></div>
+            <div id="scalarControls" hidden>
+              <label class="row">Color map <select id="map"></select></label>
+              <label class="row">Show colorbar <input id="showColorbar" type="checkbox" checked></label>
+              <label class="row">Log scale <input id="log" type="checkbox"></label>
+              <div class="row range">
+                <span>Range</span>
+                <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
+                <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
+              </div>
+              <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
+            </div>
+            <div id="zoomControl"></div>
+          </fieldset>
+        </div>
+        <div class="settings-panel" id="camera-panel" role="tabpanel" aria-labelledby="camera-tab" hidden>
+          <fieldset id="camera" class="panel-fields">
+            <legend>Scene camera</legend>
+            <div id="cameraSliders"></div>
+            <p class="hint">Drag the viewport to orbit. Changing camera distance needs a fresh estimate. Exports use the default camera.</p>
+            <button id="reset" type="button">Reset camera</button>
+          </fieldset>
+        </div>
       </div>
       <fieldset id="statistics" class="estimate-panel">
-        <legend>Render</legend>
+        <legend class="visually-hidden">Render</legend>
+        <h2>Render</h2>
         <form id="estimateForm">
           <label class="row">Samples per estimate <input id="spp" type="number" min="1" max="4096" required value="8"></label>
           <div class="estimate-actions">
@@ -92,41 +128,6 @@
 
       <p id="error" class="error" role="alert" hidden></p>
     </aside>
-
-    <section class="viewer" aria-label="Render viewport">
-      <header class="viewer-header">
-        <h2 id="imageTitle">Cornell Box</h2>
-        <span id="status" role="status" aria-live="polite">Ready</span>
-      </header>
-      <div class="view-tools">
-        <label class="view-mode">View <select id="filter" aria-describedby="viewHint"></select></label>
-        <p id="viewHint" class="view-hint"></p>
-        <div id="analyzerControl" hidden></div>
-      </div>
-      <div class="image-panel">
-        <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
-          <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
-        </div>
-        <div id="colorbar" class="colorbar" aria-label="Display colorbar" hidden>
-          <span id="barTitle"></span><output id="barMaximum"></output>
-          <div id="barGradient"></div><output id="barMinimum"></output>
-        </div>
-      </div>
-      <footer class="viewer-footer">
-        <div class="viewport-meta">
-          <span>Drag to orbit</span>
-          <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
-        </div>
-        <fieldset id="export" disabled>
-          <legend class="visually-hidden">Export</legend>
-          <p id="exportStatus" class="visually-hidden" role="status"></p>
-          <div class="export-actions">
-            <button id="saveImage">Save PNG</button>
-            <button id="saveChannels">Save channels</button>
-          </div>
-        </fieldset>
-      </footer>
-    </section>
   </main>
 </body>
 </html>
