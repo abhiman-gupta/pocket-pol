@@ -24,4 +24,10 @@ node web/render.mjs --scene cornell --size 256 --channels rgb --spp 256 --out co
 
 The command writes `cornell.png`, `cornell.f32`, and `cornell.f32.json`. Run with `--help` for seed and display options. Interactive and headless runs use the same renderer and sample sequence.
 
-The web build focuses on Pollia's interactive Cornell box, one Jarecki material model, and image and channel exports. Native Mitsuba and Pollia can serve as references for numerical comparisons. Pollia's source and license are credited in this directory. The material model is described by [Quinn Jarecki and Meredith Kupinski](https://arxiv.org/abs/2307.11976).
+## Credits and citation
+
+- **Mitsuba 3** provides the upstream source history and Cornell box scene. Wenzel Jakob created Mitsuba at EPFL's Realistic Graphics Lab. Its software citation credits Wenzel Jakob, Sébastien Speierer, Nicolas Roussel, Merlin Nimier-David, Delio Vicini, Tizian Zeltner, Baptiste Nicolet, Miguel Crespo, Vincent Leroy, and Ziyi Zhang. Thank you to the wider Mitsuba community for its contributions. [Upstream project and citation](https://github.com/mitsuba-renderer/mitsuba3#about) · [Contributors](https://github.com/mitsuba-renderer/mitsuba3/graphs/contributors)
+- **Pollia**, by `cmtribble3`, is the direct reference for the Swift window and for the Jarecki materials, polarized light source, and Mueller transport adapted to JavaScript. Its nylon parameters and color tables come from **PolRay**. [Pollia source, revision `a8c7d7ea`](https://github.com/cmtribble3/pollia/tree/a8c7d7eaa55c20473a20f63de5986fc7f29e77d7)
+- **Quinn Jarecki and Meredith Kupinski** developed the depolarizing Mueller BRDF model used in Pocket Pol. [Efficient Modeling of Depolarizing Mueller BRDFs](https://arxiv.org/abs/2307.11976)
+
+For research that uses Mitsuba 3, see the [upstream software citation in BibTeX](./mitsuba3.bib). The [full upstream license](./LICENSE) ships with the browser distribution.

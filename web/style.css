@@ -69,6 +69,10 @@ dd { margin: 0; }
 .hint, .credits { font-size: 13px; }
 .hint { margin: 5px 0; }
 .error { color: #ffb1a9; }
+.credits-page { max-width: 760px; margin: 0 auto; padding: 24px 20px; font-size: 16px; }
+.credits-page h2 { margin: 1.5rem 0 .5rem; }
+.credits-page p { margin: .5rem 0; }
+.credits-page a { color: #d1d4d7; }
 .viewer {
   min-width: 0;
   min-height: 0;
