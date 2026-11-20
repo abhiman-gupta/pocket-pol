@@ -7,12 +7,27 @@
   <meta name="theme-color" content="#ecebe6">
   <meta name="description" content="A physically based polarization renderer that runs entirely in your browser.">
   <title>Pocket Pol: A physically based polarization renderer in your browser</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23121211'/%3E%3Cellipse cx='16' cy='16' rx='10' ry='4.5' transform='rotate(-35 16 16)' fill='none' stroke='%23ecebe6' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23ecebe6'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" sizes="64x64" href="./favicon-64.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Pocket Pol">
+  <meta property="og:url" content="https://pocket-pol.abhimangupta.com/">
+  <meta property="og:title" content="Pocket Pol">
+  <meta property="og:description" content="A physically based polarization renderer that runs entirely in your browser.">
+  <meta property="og:image" content="https://pocket-pol.abhimangupta.com/preview.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="Pocket Pol render of the Cornell box with red and green walls">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Pocket Pol">
+  <meta name="twitter:description" content="A physically based polarization renderer that runs entirely in your browser.">
+  <meta name="twitter:image" content="https://pocket-pol.abhimangupta.com/preview.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=39">
-  <script type="module" src="./app.mjs?v=39"></script>
+  <link rel="stylesheet" href="./style.css?v=41">
+  <script type="module" src="./app.mjs?v=41"></script>
 </head>
 <body>
   <main class="window">
@@ -73,21 +88,21 @@
     <aside class="sidebar" aria-label="Render controls">
       <div class="source-filter">
       <section class="light-panel card" aria-labelledby="lightTitle">
-        <div class="section-head"><h2 id="lightTitle">Light Source</h2></div>
-        <label class="visually-hidden" for="sourceMode">Source polarization</label>
-        <select id="sourceMode">
-          <option value="unpolarized">Unpolarized</option>
-          <option value="polarized">Polarized</option>
-        </select>
-        <div id="sourceControls" hidden></div>
+        <div class="section-head"><h2 id="lightTitle">Light Source</h2><button type="button" class="help-button" aria-expanded="false" aria-controls="lightHelp" aria-label="Explain the light source terms">?</button></div>
+        <dl id="lightHelp" class="help-panel" hidden>
+          <dt>Unpolarized light</dt><dd>Light whose electric field has no preferred direction, like most lamps and sunlight. It is the default here: degree of polarization 0%.</dd>
+          <dt>Degree of polarization</dt><dd>The fraction of the light that is polarized, from 0% (unpolarized) to 100% (fully polarized).</dd>
+          <dt>Angle of polarization</dt><dd>The orientation of the polarization, from −90° to +90°, measured from horizontal.</dd>
+          <dt>Ellipticity</dt><dd>The shape of the polarization: 0 is linear, +1 right circular, −1 left circular, and values in between are elliptical.</dd>
+        </dl>
+        <div id="sourceControls"></div>
       </section>
 
       <section class="filter-panel card" aria-labelledby="filterTitle">
-        <div class="section-head"><h2 id="filterTitle">Display Filters</h2></div>
+        <div class="section-head"><h2 id="filterTitle">Display Filters</h2><button type="button" class="help-button" aria-expanded="false" aria-controls="filterHelp" aria-label="Explain the display filters">?</button></div>
+        <dl id="filterHelp" class="help-panel" hidden></dl>
         <label class="visually-hidden" for="filter">Display filter</label>
-        <select id="filter" aria-describedby="viewHint"></select>
-        <p id="viewHint" class="view-hint" hidden></p>
-        <p id="ellipticityHelp" class="view-hint" hidden>−1: left circular · 0: linear · +1: right circular</p>
+        <select id="filter"></select>
         <div id="analyzerControl" class="analyzer" hidden></div>
         <div id="logControl" class="log-control" hidden>
           <label class="row toggle">Log scale <input id="log" type="checkbox" role="switch"></label>
@@ -125,11 +140,11 @@
               <select id="preset"><option value="cornell">Cornell Box</option></select>
             </label>
             <div class="row">
-              <span id="depthLabel">Max depth</span>
+              <span id="depthLabel">Max path depth</span>
               <div class="stepper" role="group" aria-labelledby="depthLabel">
-                <button id="depthDown" type="button" aria-label="Decrease max depth">−</button>
+                <button id="depthDown" type="button" aria-label="Decrease max path depth">−</button>
                 <output id="depthValue" aria-live="polite">4</output>
-                <button id="depthUp" type="button" aria-label="Increase max depth">+</button>
+                <button id="depthUp" type="button" aria-label="Increase max path depth">+</button>
               </div>
               <input type="hidden" id="max_depth" value="4">
             </div>

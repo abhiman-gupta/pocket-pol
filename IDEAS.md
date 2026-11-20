@@ -42,7 +42,12 @@ The initial scope follows Pollia's Swift window, Cornell box, and Jarecki materi
 - [x] **Stokes names.** Q / I, U / I, and V / I are now called Q-Stokes, U-Stokes, and V-Stokes.
 - [x] **Camera distance under the image.** The Camera tab is gone. The camera distance slider sits right under Export and Reset camera so people find it and zoom in on the polarization patterns; the tabs are now Scene and Render Settings.
 - [x] **Image Adjustments card.** Color map, Show colorbar, and Range move out of Display Filters into their own Image Adjustments card after Light Source and Display Filters, shown for filters with a colorbar. Log scale stays in Display Filters.
-- [x] **Shorter subtitle and scene title.** The page subtitle (and meta description) drops “No downloads. No command line.” and reads “A physically based polarization renderer that runs entirely in your browser.” The scene line reads “Scene: Cornell Box”.
+- [x] **Shorter subtitle and scene title.** The page subtitle, meta description, README, and GitHub description drop “No downloads. No command line.” and reads “A physically based polarization renderer that runs entirely in your browser.” The scene line reads “Scene: Cornell Box”.
+- [x] **Default render as the icon and link preview.** The browser tab icon, Apple touch icon, and the Open Graph/Twitter image shown when the link is shared (iMessage, Slack, social) use a high-sample render of the default Cornell box (1024 SPP from the headless renderer: `web/preview.png`, with 180, 64, and 32 px icons).
+- [x] **Everything above the fold on desktop.** On first load on a desktop screen, the image, Export, Reset camera, and the camera distance slider all fit in the window without scrolling (checked from 1000 × 600 to 1920 × 1080). Short desktop windows get a tighter header, and on small images the Toggle color channels hint drops under the switch.
+- [x] **Max path depth.** The Scene tab's Max depth control is labeled Max path depth.
+- [x] **(?) help instead of inline explanations.** A circled question mark at the right of the Light Source and Display Filters headings opens a short panel of definitions (unpolarized light, degree of polarization, angle of polarization, ellipticity; and every display filter). The inline filter explanations and the ellipticity scale line are gone. Escape or a click elsewhere closes the panel.
+- [x] **Light source sliders only.** The Unpolarized/Polarized menu is gone; the three sliders are always shown and DoP starts at 0% (unpolarized).
 - [ ] **Desktop and phone support.** Verify that users can open, edit, and render a scene on both desktop and phone browsers. Tune preview quality so the controls stay responsive during rendering.
 
 - [ ] **Polarization learning tool.** Grow Pocket Pol into a tool for learning polarization, not just a renderer, building on the interactive light and analyzer controls.
@@ -80,7 +85,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Refresh the browser workspace.** Give the Cornell box the largest surface, put the light inspector on the right on desktop and below the image on mobile, and keep status and exports at the edge of the viewport. Size the viewer to the square image, place its controls directly on the workspace, and inset the colorbar within the render frame. Use a bold Pocket Polarization title directly on the page and put Credits and licenses in the page footer.
 
-- [x] **Dedicated Light Source section first.** The control panel opens with a Light Source card above Filter. Its dropdown offers Unpolarized or Polarized, and choosing Polarized reveals degree of polarization, angle of polarization, and ellipticity, starting at 100% DoP. The light intensity slider has been removed for now; renders use the default intensity. On phones the colorbar sits horizontally under the image so the render stays full width.
+- [x] **Dedicated Light Source section first.** The control panel opens with a Light Source card above Filter. (Superseded: the Unpolarized/Polarized dropdown was later removed in favor of always-visible sliders.) The light intensity slider has been removed for now; renders use the default intensity. On phones the colorbar sits horizontally under the image so the render stays full width.
 
 - [x] **Analyzer angle slider.** In the Filter section, the Analyzer and RGB Analyzer views show an Analyzer angle slider from 0° to 180° in 1° steps, styled like the light source sliders, and the image updates live as it moves. It replaced the PolRay-style analyzer wheel to save space. The analyzer is linear only; the 0°/45°/90°/135°/RCP/LCP preset buttons were removed earlier.
 
@@ -106,7 +111,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 
 - [x] **Colorbar space only when needed on phones.** On phones, collapse the space under the image when the active filter has no colorbar, such as RGB Intensity, so the Re-render bar sits right under the render.
 
-- [x] **Tagline.** Subtitle, README, and GitHub description read “A physically based polarization renderer that runs entirely in your browser. No downloads. No command line.” “No command line” describes the site visitor's experience; the headless renderer is a developer tool.
+- [x] **Tagline.** Subtitle, README, and GitHub description read “A physically based polarization renderer that runs entirely in your browser.” (The earlier “No downloads. No command line.” was dropped.)
 
 - [x] **Viewer bar aligned to the image.** On wider screens, Re-render sits flush with the image's left edge, Reset camera with its right edge, and Drag to orbit is centered under the image, whether or not the colorbar is shown. The hidden colorbar column used to push Reset camera past the image (reported in Safari).
 

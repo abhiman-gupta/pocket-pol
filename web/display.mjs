@@ -1,14 +1,14 @@
-import {palettes} from "./palettes.mjs?v=39";
-import {clamp} from "./scene.mjs?v=39";
+import {palettes} from "./palettes.mjs?v=41";
+import {clamp} from "./scene.mjs?v=41";
 
 export const filters = {
   rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true,hint:"Total light reaching the camera, shown in color from the red, green, and blue channels."},
-  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light passed by a linear polarizer at the angle below."},
+  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light passed by a linear polarizer at the analyzer angle, shown in color."},
   intensity:{title:"Intensity",exposure:true,log:true,hint:"Total light reaching the camera in the selected channel."},
-  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light passed by a linear polarizer at the angle below."},
+  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light passed by a linear polarizer at the analyzer angle, in the selected channel."},
   dop:{title:"Degree of Polarization",log:true,hint:"The fraction of the light that is polarized."},
   aolp:{title:"AoLP [°]",range:[-90,90],map:"phase",hint:"The angle of linear polarization, measured in degrees, for the selected color channel."},
-  ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis",hint:"How close the polarization is to linear or circular, for the selected color channel."},
+  ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis",hint:"How close the polarization is to linear (0) or circular (+1 right, −1 left), for the selected color channel."},
   q:{title:"Q-Stokes",range:[-1,1],map:"diverging",hint:"Q / I: horizontal versus vertical linear polarization, divided by intensity, for the selected color channel."},
   u:{title:"U-Stokes",range:[-1,1],map:"diverging",hint:"U / I: +45° versus −45° linear polarization, divided by intensity, for the selected color channel."},
   v:{title:"V-Stokes",range:[-1,1],map:"diverging",hint:"V / I: right versus left circular polarization, divided by intensity, for the selected color channel."},

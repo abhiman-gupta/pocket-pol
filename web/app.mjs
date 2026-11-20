@@ -1,12 +1,12 @@
-import {clamp,defaultScene} from "./scene.mjs?v=39";
-import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=39";
-import {setupExport} from "./export.mjs?v=39";
+import {clamp,defaultScene} from "./scene.mjs?v=41";
+import {channelNames,colorbar,displayDefaults,displayPixels,filters,luminanceWeights,maps} from "./display.mjs?v=41";
+import {setupExport} from "./export.mjs?v=41";
 
 const el = id => document.getElementById(id);
 const canvas = el("image");
 const context = canvas.getContext("2d",{alpha:false});
 const stage = el("stage");
-const workerUrl = new URL("./worker.mjs?v=39",import.meta.url);
+const workerUrl = new URL("./worker.mjs?v=41",import.meta.url);
 const worker = new Worker(workerUrl,{type:"module"});
 const controls = {};
 const narrow = matchMedia("(max-width: 540px)");
@@ -85,7 +85,6 @@ function readSettings() {
   return Object.fromEntries(Object.entries(defaultScene).map(([id,value]) => {
     if (id === "yaw") return [id,yaw];
     if (id === "pitch") return [id,pitch];
-    if (id === "source_dop" && el("sourceMode").value !== "polarized") return [id,0];
     const field = el(id);
     // Settings without a control, such as light intensity, channels, and size, keep their defaults.
     if (!field) return [id,value];
@@ -114,12 +113,31 @@ function setStatus(text) {
   el("status").textContent = text;
 }
 
-function updateSourceControls() {
-  const polarized = el("sourceMode").value === "polarized";
-  el("sourceControls").hidden = !polarized;
-  // Choosing Polarized with DoP at zero would still render unpolarized light, so start fully polarized.
-  if (polarized && Number(controls.source_dop.field.value) === 0) updateSlider("source_dop",1);
+// The (?) buttons open short explanations under the card heading. Escape or a click elsewhere closes them.
+const helpButtons = Array.from(document.querySelectorAll(".help-button"));
+function setHelp(button,open) {
+  button.setAttribute("aria-expanded",String(open));
+  el(button.getAttribute("aria-controls")).hidden = !open;
 }
+for (const button of helpButtons) {
+  button.addEventListener("click",() => {
+    const open = button.getAttribute("aria-expanded") !== "true";
+    for (const other of helpButtons) setHelp(other,other===button && open);
+  });
+}
+document.addEventListener("click",event => {
+  if (event.target.closest(".help-button, .help-panel")) return;
+  for (const button of helpButtons) setHelp(button,false);
+});
+document.addEventListener("keydown",event => {
+  if (event.key !== "Escape") return;
+  const open = helpButtons.find(button => button.getAttribute("aria-expanded") === "true");
+  if (open) {setHelp(open,false); open.focus();}
+});
+el("filterHelp").replaceChildren(...Object.values(filters).flatMap(spec => [
+  Object.assign(document.createElement("dt"),{textContent:spec.title}),
+  Object.assign(document.createElement("dd"),{textContent:spec.hint}),
+]));
 
 function setOptions(element,entries) {
   element.replaceChildren(...entries.map(([value,title]) => new Option(title,value)));
@@ -150,12 +168,8 @@ function updateFilterOptions(wanted = display.filter) {
 
 function updateDisplayControls() {
   const spec = filters[display.filter];
-  const hint = el("viewHint");
-  hint.textContent = spec.hint ?? "";
-  hint.hidden = !spec.hint;
   const previousMap = display.map;
   el("scalarControls").hidden = Boolean(spec.rgb);
-  el("ellipticityHelp").hidden = display.filter !== "ellipticity";
   el("analyzerControl").hidden = !spec.analyzer;
   el("logControl").hidden = !spec.log;
   const channelRatio = ["q","u","v"].includes(display.filter);
@@ -427,7 +441,6 @@ el("preset").addEventListener("change",() => {
   el("sceneName").textContent = el("preset").selectedOptions[0].text;
   renderCamera();
 });
-el("sourceMode").addEventListener("change",() => {updateSourceControls(); renderCamera();});
 
 function stepDepth(delta) {
   const value = clamp(Number(el("max_depth").value)+delta,1,64);
@@ -607,6 +620,5 @@ setupExport({
 });
 
 updateFilterOptions();
-updateSourceControls();
 setAnalyzer();
 begin();
