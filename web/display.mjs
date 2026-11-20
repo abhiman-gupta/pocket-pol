@@ -2,16 +2,16 @@ import {palettes} from "./palettes.mjs";
 import {clamp} from "./scene.mjs";
 
 export const filters = {
-  rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true},
-  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true},
-  intensity:{title:"Intensity",exposure:true,log:true},
-  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true},
-  dop:{title:"Degree of Polarization",log:true},
-  aolp:{title:"AoLP [°]",range:[-90,90],map:"phase"},
-  ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis"},
-  q:{title:"Q / I",range:[-1,1],map:"diverging"},
-  u:{title:"U / I",range:[-1,1],map:"diverging"},
-  v:{title:"V / I",range:[-1,1],map:"diverging"},
+  rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true,hint:"Total light reaching the camera in red, green, and blue."},
+  rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light transmitted by a rotating linear polarizer."},
+  intensity:{title:"Intensity",exposure:true,log:true,hint:"Total light reaching the camera in the selected channel."},
+  analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light transmitted by a rotating linear polarizer."},
+  dop:{title:"Degree of Polarization",log:true,hint:"The fraction of the light that is polarized."},
+  aolp:{title:"AoLP [°]",range:[-90,90],map:"phase",hint:"The angle of linear polarization, measured in degrees."},
+  ellipticity:{title:"Ellipticity",range:[-1,1],map:"viridis",hint:"How close the polarization is to linear or circular."},
+  q:{title:"Q / I",range:[-1,1],map:"diverging",hint:"Horizontal versus vertical linear polarization, divided by intensity."},
+  u:{title:"U / I",range:[-1,1],map:"diverging",hint:"+45° versus −45° linear polarization, divided by intensity."},
+  v:{title:"V / I",range:[-1,1],map:"diverging",hint:"Right versus left circular polarization, divided by intensity."},
 };
 export const maps = ["turbo","viridis","phase","diverging","grayscale","seismic"];
 

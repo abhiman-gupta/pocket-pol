@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Pol</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./app.mjs"></script>
+  <link rel="stylesheet" href="./style.css?v=2">
+  <script type="module" src="./app.mjs?v=2"></script>
 </head>
 <body>
   <header class="app-header">
@@ -28,18 +28,18 @@
           <label class="row">Image size
             <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
           </label>
+          <div id="sourceControls"></div>
           <details>
-            <summary>Lighting and path settings</summary>
+            <summary>Advanced lighting and path settings</summary>
+            <div id="advancedSourceControls"></div>
             <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
             <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
-            <div id="sourceControls"></div>
           </details>
         </fieldset>
       </div>
       <div class="settings-panel" id="display-panel" role="tabpanel" aria-labelledby="display-tab" hidden>
         <fieldset class="panel-fields">
-          <legend>Image display</legend>
-          <label class="row">Filter <select id="filter"></select></label>
+          <legend>Image adjustments</legend>
           <label class="row" id="channelRow">Display channel
             <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
           </label>
@@ -77,6 +77,7 @@
             <button id="stop" type="button" disabled>Stop</button>
           </div>
         </form>
+        <p id="sceneChanges" class="hint pending-changes" role="status" hidden>The viewport still shows the previous scene. Start a fresh estimate to apply your changes.</p>
         <details>
           <summary>Render statistics</summary>
           <dl>
@@ -97,6 +98,11 @@
         <h2 id="imageTitle">Cornell Box</h2>
         <span id="status" role="status" aria-live="polite">Ready</span>
       </header>
+      <div class="view-tools">
+        <label class="view-mode">View <select id="filter" aria-describedby="viewHint"></select></label>
+        <p id="viewHint" class="view-hint"></p>
+        <div id="analyzerControl" hidden></div>
+      </div>
       <div class="image-panel">
         <div id="stage" tabindex="0" aria-label="Cornell Box render. Use arrow keys to orbit.">
           <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>

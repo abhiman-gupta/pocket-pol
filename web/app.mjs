@@ -1,5 +1,5 @@
 import {clamp,defaultScene} from "./scene.mjs";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=2";
 import {exportChannels} from "./renderer.mjs";
 import {zipFiles} from "./files.mjs";
 
@@ -53,12 +53,12 @@ function updateSlider(id,value) {
 const fixed = digits => value => value.toFixed(digits);
 const degrees = value => value.toFixed(1)+"°";
 const factor = digits => value => value.toFixed(digits)+"×";
-slider("sourceControls","light_scale","Light scale",0,10,.01,1,fixed(2));
-slider("sourceControls","source_dop","Source DoP",0,1,.01,0,fixed(2));
-slider("sourceControls","source_aolp","Source AoLP",-90,90,.1,0,degrees);
+slider("advancedSourceControls","light_scale","Light intensity",0,10,.01,1,factor(2));
+slider("sourceControls","source_dop","Source polarization",0,1,.01,0,value => Math.round(value*100)+"%");
+slider("sourceControls","source_aolp","Source angle",-90,90,.1,0,degrees);
 slider("sourceControls","source_ellipticity","Source ellipticity",-1,1,.01,0,fixed(2));
 slider("displaySliders","exposure","Exposure",-8,8,.1,0,value => (value>0 ? "+" : "")+value.toFixed(1)+" EV");
-slider("displaySliders","angle","Analyzer",-90,90,.1,0,degrees);
+slider("analyzerControl","angle","Analyzer angle",-90,90,.1,0,degrees);
 slider("zoomControl","zoom","Display zoom",1,4,.1,1,factor(1));
 slider("cameraSliders","yaw","Yaw",-180,180,.1,0,degrees);
 slider("cameraSliders","pitch","Pitch",-80,80,.1,0,degrees);
@@ -81,7 +81,14 @@ function updateButtons() {
   el("scene").disabled = running;
   el("camera").disabled = running;
   el("export").disabled = !frame;
+  el("sceneChanges").hidden = running || !frame || !dirty;
   el("progress").classList.toggle("active",running);
+}
+
+function updateSourceControls() {
+  const unpolarized = Number(controls.source_dop.field.value) === 0;
+  controls.source_aolp.wrapper.hidden = unpolarized;
+  controls.source_ellipticity.wrapper.hidden = unpolarized;
 }
 
 function setOptions(element,entries) {
@@ -92,7 +99,7 @@ function updateFilterOptions(wanted = display.filter) {
   const rgb = (frame?.channels ?? (el("channels").value==="rgb" ? 3 : 1)) === 3;
   const entries = Object.entries(filters).filter(([,spec]) => rgb || !spec.rgb);
   setOptions(el("filter"),entries.map(([id,spec]) => [id,spec.title]));
-  if (!entries.some(([id]) => id===wanted)) wanted = "intensity";
+  if (!entries.some(([id]) => id===wanted)) wanted = wanted === "rgbAnalyzer" ? "analyzer" : "intensity";
   el("filter").value = wanted;
   if (wanted!==display.filter) changeFilter();
   else updateDisplayControls();
@@ -100,13 +107,14 @@ function updateFilterOptions(wanted = display.filter) {
 
 function updateDisplayControls() {
   const spec = filters[display.filter];
+  el("viewHint").textContent = spec.hint;
   const previousMap = display.map;
   const hasRGB = (frame?.channels ?? (el("channels").value === "rgb" ? 3 : 1)) === 3;
   el("channelRow").hidden = spec.rgb || !hasRGB;
   el("scalarControls").hidden = Boolean(spec.rgb);
   el("ellipticityHelp").hidden = display.filter !== "ellipticity";
   controls.exposure.wrapper.hidden = !spec.exposure;
-  controls.angle.wrapper.hidden = !spec.analyzer;
+  el("analyzerControl").hidden = !spec.analyzer;
   const channelRatio = ["q","u","v"].includes(display.filter);
   const available = maps.filter(map => map !== "seismic" || channelRatio);
   setOptions(el("map"),available.map(map => [map,map[0].toUpperCase()+map.slice(1)]));
@@ -146,7 +154,7 @@ function draw() {
   context.putImageData(new ImageData(displayPixels(frame,display),frame.size,frame.size),0,0);
 }
 
-function begin(fresh,wantedFilter = display.filter,startup = false) {
+function begin(fresh,startup = false) {
   if (running || drag || el(fresh ? "fresh" : "continue").disabled) return;
   const settings = readSettings();
   requested = el("spp").valueAsNumber;
@@ -154,10 +162,9 @@ function begin(fresh,wantedFilter = display.filter,startup = false) {
   if (fresh) {
     frame = undefined;
     loadedSettings = JSON.stringify(settings);
-    context.clearRect(0,0,canvas.width,canvas.height);
     el("completed").textContent = "0 SPP";
     for (const id of ["batch","delivery","dimensions","backend"]) el(id).textContent = "—";
-    updateFilterOptions(wantedFilter);
+    updateFilterOptions();
     draw();
   }
   el("error").hidden = true;
@@ -249,16 +256,16 @@ function stop() {
   worker.postMessage({type:"stop"});
 }
 el("stop").addEventListener("click",stop);
-for (const id of ["size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
-el("channels").addEventListener("change",() => {
-  begin(true,el("channels").value === "rgb" ? "rgbIntensity" : "intensity");
-});
+for (const id of ["channels","size","max_depth","rr_depth","spp"]) el(id).addEventListener("input",updateButtons);
 for (const [id,{field}] of Object.entries(controls)) {
   field.addEventListener("input",() => {
     updateSlider(id);
     if (id === "zoom") canvas.style.transform = "scale("+field.value+")";
     else if (id === "exposure" || id === "angle") {display[id] = Number(field.value);draw();}
-    else updateButtons();
+    else {
+      if (id === "source_dop") updateSourceControls();
+      updateButtons();
+    }
   });
 }
 el("filter").addEventListener("change",changeFilter);
@@ -334,4 +341,5 @@ el("saveChannels").addEventListener("click",() => {
 });
 
 updateFilterOptions();
-begin(true,display.filter,true);
+updateSourceControls();
+begin(true,true);
