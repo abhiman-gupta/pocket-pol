@@ -10,4 +10,10 @@ The app lives in [`web/`](web/). See [`web/README.md`](web/README.md) for runnin
 
 ## Credits
 
-Pocket Pol follows [Pollia](https://github.com/cmtribble3/pollia) (by cmtribble3, Abhiman Gupta, and kupinski) for its interface, Jarecki material model, and Mueller transport, and PolRay for its starting scene. It builds on [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3)'s Cornell box scene; Mitsuba's license and preferred citation ship in [`web/LICENSE`](web/LICENSE) and [`web/mitsuba3.bib`](web/mitsuba3.bib). Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).
+Pocket Pol brings the polarization models of [Pollia](https://github.com/cmtribble3/pollia) to the browser. Pollia is a research renderer for polarized light transport, built as a fork of [Mitsuba 3](https://github.com/mitsuba-renderer/mitsuba3) and developed by cmtribble3, Abhiman Gupta, and kupinski. Pocket Pol adapts Pollia's interactive window, its implementation of the Jarecki material model, its polarized emitter and Mueller transport, and its display filters and color maps.
+
+- **Mitsuba 3**, created by Wenzel Jakob at EPFL's Realistic Graphics Lab, is the foundation Pollia builds on. Pocket Pol's Cornell box geometry also follows Mitsuba's Cornell box scene. Its preferred citation ships in [`web/mitsuba3.bib`](web/mitsuba3.bib).
+- **PolRay** supplied the default Cornell box layout and reflectances, the analyzer wheel's design, and Pollia's nylon material parameters and color tables.
+- **The Jarecki material model** comes from Quinn Jarecki and Meredith Kupinski, "Efficient Modeling of Depolarizing Mueller BRDFs," [arXiv:2307.11976](https://doi.org/10.48550/arXiv.2307.11976) (2023).
+
+Mitsuba 3 and Pollia are distributed under a BSD 3-Clause license (© 2017 Wenzel Jakob). Its full text ships in [`web/LICENSE`](web/LICENSE). Pocket Pol is independent and not affiliated with or endorsed by EPFL or the Mitsuba 3 developers. Full credits are on the site's [credits page](https://pocket-pol.abhimangupta.com/credits.html).

@@ -52,7 +52,7 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 - [x] Connect `pocket-pol.abhimangupta.com` to the existing preview site over HTTPS.
 - [x] Move the browser deployment from ChatGPT Sites to public GitHub Pages. Verify WebGPU and HTTPS on `pocket-pol.abhimangupta.com` before retiring the old hosting. (2026-11-20: the `web/` build is live on `gh-pages`, GitHub issued the custom-domain certificate (expires 2027-02-18), and the HTTPS site gets a WebGPU adapter. Enforce HTTPS is on, so HTTP redirects to HTTPS.)
 - [x] Build the Pollia-style browser version on `test-pocket-pol-web`. Use native Pollia to compare the browser renderer's output.
-- Credit Mitsuba 3 and its contributors, Pollia, PolRay, and the Jarecki model research in the app and source documentation. Ship the upstream license and preferred Mitsuba 3 citation with the browser build.
+- [x] **Full credits.** Credit Mitsuba 3 and its contributors, Pollia, PolRay, and the Jarecki model research in the app and source documentation. The credits page explains that Pollia is built as a fork of Mitsuba 3, lists what Pocket Pol adapts from Pollia and PolRay, cites the Jarecki and Kupinski paper with its DOI, credits the DM Sans and DM Mono fonts (OFL 1.1), reproduces the BSD 3-Clause notice, and states that Pocket Pol is not affiliated with or endorsed by EPFL or the Mitsuba 3 developers. Ship the upstream license and preferred Mitsuba 3 citation with the browser build.
 - Credit `cmtribble3`, `abhiman-gupta`, and `kupinski` as Pollia’s developers on GitHub.
 
 - [x] **Automatic deploys with GitHub Actions.** Every push to `main` that touches `web/` publishes the site through `.github/workflows/deploy.yml`, so the live site always matches committed source. Pages uses the GitHub Actions source with the custom domain and Enforce HTTPS kept in settings.
@@ -82,6 +82,8 @@ Defer Jones transport. Use Stokes vectors and Mueller matrices for path accumula
 - [x] **Colorbar space only when needed on phones.** On phones, collapse the space under the image when the active filter has no colorbar, such as RGB Intensity, so the Re-render bar sits right under the render.
 
 - [x] **Tagline.** Subtitle, README, and GitHub description read “A physically based polarization renderer that runs entirely in your browser. No downloads. No command line.” “No command line” describes the site visitor's experience; the headless renderer is a developer tool.
+
+- [x] **Viewer bar aligned to the image.** On wider screens, Re-render sits flush with the image's left edge, Reset camera with its right edge, and Drag to orbit is centered under the image, whether or not the colorbar is shown. The hidden colorbar column used to push Reset camera past the image (reported in Safari).
 
 - Use neutral graphite and silver for the controls and interface accents, leaving saturated color to the rendered scene and material swatches.
 - Make the render the focal point. Pair the render with a light, tabbed inspector for Scene, Display, and Camera. Keep render actions together and exports beside the viewport.

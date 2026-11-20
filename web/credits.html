@@ -5,31 +5,50 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Credits and licenses | Pocket Pol</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
-  <link rel="stylesheet" href="./style.css?v=28">
+  <link rel="stylesheet" href="./style.css?v=29">
 </head>
 <body>
   <main class="credits-page">
     <nav aria-label="Pocket Pol"><a href="./">← Pocket Pol</a></nav>
     <h1>Credits and licenses</h1>
-    <p>Pocket Pol is an independent browser adaptation of polarized rendering from Mitsuba 3 and Pollia.</p>
+    <p>Pocket Pol is a browser renderer for polarized light, written in JavaScript and WebGPU. It brings the polarization models of Pollia, a research renderer built on Mitsuba&nbsp;3, to the web. Pocket Pol stands on the work of the people and projects below.</p>
 
     <h2>Mitsuba 3</h2>
-    <p>Pocket Pol builds on Mitsuba 3’s Cornell box scene and ships Mitsuba’s license and preferred citation. Wenzel Jakob created Mitsuba at EPFL’s Realistic Graphics Lab. Its preferred software citation names Wenzel Jakob, Sébastien Speierer, Nicolas Roussel, Merlin Nimier-David, Delio Vicini, Tizian Zeltner, Baptiste Nicolet, Miguel Crespo, Vincent Leroy, and Ziyi Zhang. Thank you to everyone who has contributed to Mitsuba.</p>
-    <p><a href="https://github.com/mitsuba-renderer/mitsuba3#about">Mitsuba 3 source and preferred citation</a> · <a href="https://github.com/mitsuba-renderer/mitsuba3/graphs/contributors">All contributors</a></p>
-    <p><a href="./mitsuba3.bib" download>Download the Mitsuba 3 BibTeX citation</a></p>
+    <p>Mitsuba&nbsp;3 is a research-oriented renderer for forward and inverse light transport, developed at EPFL’s Realistic Graphics Lab. Wenzel Jakob created the project. Its preferred software citation names Wenzel Jakob, Sébastien Speierer, Nicolas Roussel, Merlin Nimier-David, Delio Vicini, Tizian Zeltner, Baptiste Nicolet, Miguel Crespo, Vincent Leroy, and Ziyi Zhang. Thank you to everyone who has contributed to Mitsuba.</p>
+    <p>Pollia is a fork of Mitsuba&nbsp;3, so the polarization rendering that Pocket Pol adapts rests on Mitsuba’s design. Pocket Pol’s Cornell box geometry also follows Mitsuba’s built-in Cornell box scene.</p>
+    <p><a href="https://github.com/mitsuba-renderer/mitsuba3">Mitsuba 3 source</a> · <a href="https://github.com/mitsuba-renderer/mitsuba3/graphs/contributors">All contributors</a> · <a href="./mitsuba3.bib" download>Download the BibTeX citation</a></p>
 
-    <h2>Pollia and PolRay</h2>
-    <p>Pollia is developed by <code>cmtribble3</code>, <code>abhiman-gupta</code>, and <code>kupinski</code> on GitHub.</p>
-    <p>The interactive window follows Pollia’s Swift interface, and the JavaScript renderer adapts its Jarecki material implementation, polarized emitter, and Mueller transport. Pollia’s nylon material parameters and color tables come from PolRay.</p>
-    <p><a href="https://github.com/cmtribble3/pollia/tree/a8c7d7eaa55c20473a20f63de5986fc7f29e77d7">Pollia source, revision a8c7d7ea</a></p>
+    <h2>Pollia</h2>
+    <p>Pollia is a research renderer for polarized light transport, custom polarimetric BRDFs, and Stokes image generation. It is built as a fork of Mitsuba&nbsp;3 and developed by <a href="https://github.com/cmtribble3">cmtribble3</a>, Abhiman Gupta (<a href="https://github.com/abhiman-gupta">abhiman-gupta</a>), and <a href="https://github.com/kupinski">kupinski</a>.</p>
+    <p>Pocket Pol adapts these parts of Pollia:</p>
+    <ul>
+      <li>the layout of its Swift interactive window</li>
+      <li>its implementation of the Jarecki material model, with RGB and monochrome channels</li>
+      <li>its polarized area emitter and Mueller-matrix path transport</li>
+      <li>its polarization display filters and color maps</li>
+    </ul>
+    <p>Pollia is the reference for checking Pocket Pol’s output.</p>
+    <p><a href="https://github.com/cmtribble3/pollia">Pollia source</a> · <a href="https://github.com/cmtribble3/pollia/tree/a8c7d7eaa55c20473a20f63de5986fc7f29e77d7">Revision a8c7d7ea, used by Pocket Pol</a></p>
+
+    <h2>PolRay</h2>
+    <p>Several pieces come from PolRay, a polarization ray tracer:</p>
+    <ul>
+      <li>Pocket Pol’s default Cornell box: its layout, camera framing, and RGB diffuse reflectances</li>
+      <li>the style of the analyzer wheel</li>
+      <li>Pollia’s nylon material parameters and display color tables</li>
+    </ul>
 
     <h2>Jarecki material model</h2>
-    <p>The material model is based on the research of Quinn Jarecki and Meredith Kupinski.</p>
-    <p><a href="https://arxiv.org/abs/2307.11976">Efficient Modeling of Depolarizing Mueller BRDFs</a></p>
+    <p>Pocket Pol’s material model follows the depolarizing Mueller BRDF developed by Quinn Jarecki and Meredith Kupinski.</p>
+    <p>Quinn Jarecki and Meredith Kupinski. “Efficient Modeling of Depolarizing Mueller BRDFs.” arXiv:2307.11976, 2023. <a href="https://doi.org/10.48550/arXiv.2307.11976">doi:10.48550/arXiv.2307.11976</a></p>
 
-    <h2>Source license</h2>
-    <p>The browser distribution includes the complete upstream copyright notice, redistribution terms, and disclaimer.</p>
-    <p><a href="./LICENSE">Read the full source license</a> · <a href="https://github.com/abhiman-gupta/pocket-pol/tree/test-pocket-pol-web/web">Pocket Pol source</a></p>
+    <h2>Fonts</h2>
+    <p>DM Sans and DM Mono, served by Google Fonts, are licensed under the <a href="https://openfontlicense.org/">SIL Open Font License 1.1</a>.</p>
+
+    <h2>Licenses</h2>
+    <p>Mitsuba&nbsp;3 and Pollia are distributed under a BSD 3-Clause license. Copyright © 2017 Wenzel Jakob. Pocket Pol includes code adapted from Pollia, so it ships the complete copyright notice, redistribution conditions, and disclaimer from that license.</p>
+    <p><a href="./LICENSE">Read the full license</a> · <a href="https://github.com/abhiman-gupta/pocket-pol">Pocket Pol source</a></p>
+    <p class="note">Pocket Pol is an independent project. It is not affiliated with or endorsed by EPFL or the Mitsuba&nbsp;3 developers. The names of Mitsuba&nbsp;3’s copyright holder and contributors are used only for attribution.</p>
   </main>
 </body>
 </html>
