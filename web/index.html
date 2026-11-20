@@ -71,8 +71,18 @@
 
     <aside class="sidebar" aria-label="Render controls">
       <div class="source-filter">
+      <section class="light-panel card" aria-labelledby="lightTitle">
+        <div class="section-head"><h2 id="lightTitle">Light Source</h2></div>
+        <label class="visually-hidden" for="sourceMode">Source polarization</label>
+        <select id="sourceMode">
+          <option value="unpolarized">Unpolarized</option>
+          <option value="polarized">Polarized</option>
+        </select>
+        <div id="sourceControls" hidden></div>
+      </section>
+
       <section class="filter-panel card" aria-labelledby="filterTitle">
-        <div class="section-head"><h2 id="filterTitle">Display Filter</h2></div>
+        <div class="section-head"><h2 id="filterTitle">Display Filters</h2></div>
         <label class="visually-hidden" for="filter">Display filter</label>
         <select id="filter" aria-describedby="viewHint"></select>
         <p id="viewHint" class="view-hint" hidden></p>
@@ -96,16 +106,6 @@
           </div>
           <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
         </details>
-      </section>
-
-      <section class="light-panel card" aria-labelledby="lightTitle">
-        <div class="section-head"><h2 id="lightTitle">Light Source</h2></div>
-        <label class="visually-hidden" for="sourceMode">Source polarization</label>
-        <select id="sourceMode">
-          <option value="unpolarized">Unpolarized</option>
-          <option value="polarized">Polarized</option>
-        </select>
-        <div id="sourceControls" hidden></div>
       </section>
       </div>
 
