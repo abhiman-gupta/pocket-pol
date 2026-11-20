@@ -2,7 +2,7 @@ import {palettes} from "./palettes.mjs";
 import {clamp} from "./scene.mjs";
 
 export const filters = {
-  rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true,hint:"Total light reaching the camera in red, green, and blue."},
+  rgbIntensity:{title:"RGB Intensity",exposure:true,rgb:true},
   rgbAnalyzer:{title:"RGB Analyzer",exposure:true,rgb:true,analyzer:true,hint:"Light transmitted by a rotating linear polarizer."},
   intensity:{title:"Intensity",exposure:true,log:true,hint:"Total light reaching the camera in the selected channel."},
   analyzer:{title:"Analyzer",exposure:true,log:true,analyzer:true,hint:"Light transmitted by a rotating linear polarizer."},

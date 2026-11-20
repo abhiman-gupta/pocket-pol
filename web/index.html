@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pocket Polarization: A web-based physically based renderer</title>
-  <link rel="stylesheet" href="./style.css?v=13">
-  <script type="module" src="./app.mjs?v=8"></script>
+  <link rel="stylesheet" href="./style.css?v=14">
+  <script type="module" src="./app.mjs?v=9"></script>
 </head>
 <body>
   <main class="window">
@@ -15,7 +15,7 @@
         <h2 id="imageTitle">Cornell Box</h2>
         <label class="view-mode"><span class="visually-hidden">Polarization view</span><select id="filter" aria-describedby="viewHint"></select></label>
       </header>
-      <p id="viewHint" class="view-hint"></p>
+      <p id="viewHint" class="view-hint" hidden></p>
       <div id="analyzerControl" hidden></div>
       <div id="stage" tabindex="0" aria-label="Cornell Box render. Drag or use arrow keys to orbit the camera. Press Home to reset the angle.">
         <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>

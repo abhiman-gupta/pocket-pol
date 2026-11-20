@@ -1,5 +1,5 @@
 import {clamp,defaultScene} from "./scene.mjs";
-import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=2";
+import {colorbar,displayDefaults,displayPixels,filters,maps} from "./display.mjs?v=3";
 import {exportChannels} from "./renderer.mjs";
 import {zipFiles} from "./files.mjs";
 
@@ -118,7 +118,9 @@ function updateFilterOptions(wanted = display.filter) {
 
 function updateDisplayControls() {
   const spec = filters[display.filter];
-  el("viewHint").textContent = spec.hint;
+  const hint = el("viewHint");
+  hint.textContent = spec.hint ?? "";
+  hint.hidden = !spec.hint;
   const previousMap = display.map;
   const hasRGB = (frame?.channels ?? (el("channels").value === "rgb" ? 3 : 1)) === 3;
   el("channelRow").hidden = spec.rgb || !hasRGB;
