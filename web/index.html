@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pocket Pol</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <main class="window">
+    <aside class="sidebar" aria-label="Render controls">
+      <fieldset id="scene">
+        <legend>Scene</legend>
+        <strong>Cornell Box</strong>
+        <label class="row">Channels
+          <select id="channels"><option value="rgb">RGB polarized</option><option value="mono">Monochrome polarized</option></select>
+        </label>
+        <label class="row">Image size
+          <select id="size"><option value="128">128 × 128</option><option value="256" selected>256 × 256</option></select>
+        </label>
+        <label class="row">Max depth <input id="max_depth" type="number" min="1" max="64" required value="4"></label>
+        <label class="row">RR starts at <input id="rr_depth" type="number" min="1" max="128" required value="8"></label>
+        <div id="sourceControls"></div>
+      </fieldset>
+
+      <fieldset id="statistics">
+        <legend>Statistics</legend>
+        <form id="estimateForm">
+          <label class="row">Samples per estimate <input id="spp" type="number" min="1" max="4096" required value="8"></label>
+          <div class="actions">
+            <button id="fresh" class="primary" type="submit">Fresh Estimate</button>
+            <button id="continue" type="button" disabled>Continue</button>
+            <button id="stop" type="button" disabled>Stop</button>
+          </div>
+        </form>
+        <dl>
+          <div class="row"><dt>Completed</dt><dd id="completed">0 SPP</dd></div>
+          <div class="row"><dt>Last batch</dt><dd id="batch">—</dd></div>
+          <div class="row"><dt>Image delivery</dt><dd id="delivery">—</dd></div>
+          <div class="row"><dt>Image</dt><dd id="dimensions">—</dd></div>
+        </dl>
+      </fieldset>
+
+      <fieldset>
+        <legend>Display</legend>
+        <label class="row">Filter <select id="filter"></select></label>
+        <label class="row" id="channelRow">Display channel
+          <select id="channel"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option></select>
+        </label>
+        <p id="ellipticityHelp" class="hint" hidden>−1: left circular · 0: linear · +1: right circular</p>
+        <div id="displaySliders"></div>
+        <div id="scalarControls" hidden>
+          <label class="row">Color map <select id="map"></select></label>
+          <label class="row">Show colorbar <input id="showColorbar" type="checkbox" checked></label>
+          <label class="row">Log scale <input id="log" type="checkbox"></label>
+          <div class="row range">
+            <span>Range</span>
+            <input id="minimum" type="number" aria-label="Range minimum" value="0" step="any" required>
+            <input id="maximum" type="number" aria-label="Range maximum" value="1" step="any" required>
+          </div>
+          <p id="rangeError" class="hint error" hidden>Maximum must be greater than minimum.</p>
+        </div>
+        <div id="zoomControl"></div>
+      </fieldset>
+
+      <fieldset id="camera">
+        <legend>Camera</legend>
+        <p class="hint">Drag the image to orbit. Start a fresh estimate after editing camera settings.</p>
+        <div id="cameraSliders"></div>
+        <button id="reset" type="button">Reset Camera</button>
+      </fieldset>
+
+      <fieldset id="export" disabled>
+        <legend>Export</legend>
+        <div class="actions">
+          <button id="saveImage">Save Image…</button>
+          <button id="saveChannels">Save Channels…</button>
+        </div>
+      </fieldset>
+      <p id="error" class="error" role="alert" hidden></p>
+      <a class="credits" href="./LICENSE">Source license</a>
+    </aside>
+
+    <section class="viewer" aria-label="Render viewport">
+      <header class="viewer-header">
+        <strong>Pocket Pol</strong>
+        <span id="imageTitle">Cornell Box</span>
+        <span id="status" role="status" aria-live="polite">Ready</span>
+      </header>
+      <div class="image-panel">
+        <div id="stage" tabindex="0" aria-label="Cornell Box render. Use arrow keys to orbit.">
+          <canvas id="image" width="256" height="256" aria-label="Rendered Cornell Box"></canvas>
+        </div>
+        <div id="colorbar" class="colorbar" aria-label="Display colorbar" hidden>
+          <span id="barTitle"></span><output id="barMaximum"></output>
+          <div id="barGradient"></div><output id="barMinimum"></output>
+        </div>
+      </div>
+      <progress id="progress" aria-label="Estimate progress" max="1" value="0"></progress>
+    </section>
+  </main>
+</body>
+</html>
