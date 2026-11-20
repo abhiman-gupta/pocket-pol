@@ -1,6 +1,8 @@
 # Pocket Pol
 
-Pocket Polarization is a lightweight browser renderer for polarized light transport. It follows [Pollia](https://github.com/cmtribble3/pollia)'s Swift window and Cornell box at revision `a8c7d7ea`. It uses Pollia's Jarecki material parameters, Mueller transport, display filters, and color maps. A WebGPU compute shader accelerates rendering, with a JavaScript CPU renderer for browsers and headless systems without compatible GPU access.
+Pocket Polarization is a lightweight, physically based renderer for exploring polarized light in your browser, with no software to install. In the Cornell box, you can change the source polarization, rotate a virtual analyzer, and inspect intensity and the Stokes channels to see how light and surfaces affect the result.
+
+The interface follows Pollia's Swift window and Cornell box. The renderer uses Pollia's Jarecki material parameters, Mueller transport, display filters, and color maps. A WebGPU compute shader accelerates rendering, with a JavaScript CPU fallback. [Pollia source, revision `a8c7d7ea`](https://github.com/cmtribble3/pollia/tree/a8c7d7eaa55c20473a20f63de5986fc7f29e77d7)
 
 ## Interactive window
 
