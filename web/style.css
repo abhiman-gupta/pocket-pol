@@ -372,7 +372,7 @@ h1, h2, h3, dl, dd, p { margin: 0; }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .panel-fields > legend, .section-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   width: 100%;
@@ -382,6 +382,7 @@ fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .panel-fields > legend > span:first-child, .section-head h2 {
   font-family: var(--display);
   font-size: 1.0625rem;
+  line-height: 22px;
   font-weight: 500;
   letter-spacing: var(--d-track-sm);
 }
